@@ -139,8 +139,8 @@ const Admin = () => {
                     <tr key={c.id} className="border-b border-border hover:bg-surface transition-colors">
                       <td className="py-3 px-2 text-sm font-medium text-foreground">{c.fullName}</td>
                       <td className="py-3 px-2 text-sm text-muted-foreground hidden sm:table-cell">{c.email}</td>
-                      <td className="py-3 px-2 text-sm text-muted-foreground hidden md:table-cell">{c.education}</td>
-                      <td className="py-3 px-2 text-sm text-muted-foreground hidden md:table-cell">{c.experience}</td>
+                      <td className="py-3 px-2 text-sm text-muted-foreground hidden md:table-cell">{c.education[0]?.degree || "—"}</td>
+                      <td className="py-3 px-2 text-sm text-muted-foreground hidden md:table-cell">{c.experiences[0]?.designation || "—"}</td>
                       <td className="py-3 px-2 text-right">
                         <div className="flex gap-1 justify-end">
                           <Button variant="ghost" size="sm" onClick={() => toast.info("Profile view coming soon")}>
