@@ -45,7 +45,19 @@ interface CandidateApplicationEmailPayload {
   jobId?: string;
 }
 
-type EmailPayload = EmployerEmailPayload | CandidateApplicationEmailPayload;
+interface CandidateInvoiceEmailPayload {
+  recipientType?: "candidate_invoice";
+  candidateEmail: string;
+  candidateName: string;
+  invoiceNo: string;
+  paymentId: string;
+  amount: string;
+  planName: string;
+  paidAt: string;
+  status: string;
+}
+
+type EmailPayload = EmployerEmailPayload | CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload;
 
 const detailRow = (label: string, value: string | null | undefined) => {
   const safeValue = value && value.trim() ? value : "Not specified";
@@ -244,17 +256,57 @@ const candidateEmailTemplate = (data: CandidateApplicationEmailPayload) => ({
   `,
 });
 
+const candidateInvoiceTemplate = (data: CandidateInvoiceEmailPayload) => ({
+  subject: `Payment Invoice ${data.invoiceNo} - Hare Krishna Job Placement`,
+  html: `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; padding: 24px; color: #1e293b;">
+      <div style="max-width: 700px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: #ffffff; padding: 24px 26px;">
+          <p style="margin: 0; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.9;">${SENDER_NAME}</p>
+          <h2 style="margin: 8px 0 4px; font-size: 24px; line-height: 1.2;">Payment Invoice</h2>
+          <p style="margin: 0; font-size: 14px; opacity: 0.92;">Invoice No: ${data.invoiceNo}</p>
+        </div>
+
+        <div style="padding: 22px 26px;">
+          <p style="margin: 0 0 10px; font-size: 15px;">Hello ${data.candidateName},</p>
+          <p style="margin: 0 0 16px; font-size: 14px; color: #334155;">Your payment invoice details are below.</p>
+
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+            ${detailRow("Invoice No", data.invoiceNo)}
+            ${detailRow("Payment ID", data.paymentId)}
+            ${detailRow("Plan", data.planName)}
+            ${detailRow("Amount", data.amount)}
+            ${detailRow("Paid On", data.paidAt)}
+            ${detailRow("Status", data.status)}
+          </table>
+
+          <p style="margin: 16px 0 0; font-size: 14px; color: #334155;">If you need any support, reply to this email.</p>
+        </div>
+
+        <div style="background: #f1f5f9; border-top: 1px solid #e2e8f0; padding: 16px 26px;">
+          <p style="margin: 0; font-size: 13px; color: #475569;">Regards,<br/>${SENDER_NAME} Team</p>
+        </div>
+      </div>
+    </div>
+  `,
+});
+
 async function sendViaResend(payload: EmailPayload) {
   if (!RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not set");
   }
 
-  const isCandidatePayload = (payload as CandidateApplicationEmailPayload).candidateEmail !== undefined;
-  const template = isCandidatePayload
+  const recipientType = (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).recipientType;
+  const isCandidateStatusPayload = recipientType === "candidate";
+  const isCandidateInvoicePayload = recipientType === "candidate_invoice";
+
+  const template = isCandidateStatusPayload
     ? candidateEmailTemplate(payload as CandidateApplicationEmailPayload)
-    : emailTemplates[(payload as EmployerEmailPayload).emailType](payload as EmployerEmailPayload);
-  const toEmail = isCandidatePayload
-    ? (payload as CandidateApplicationEmailPayload).candidateEmail
+    : isCandidateInvoicePayload
+      ? candidateInvoiceTemplate(payload as CandidateInvoiceEmailPayload)
+      : emailTemplates[(payload as EmployerEmailPayload).emailType](payload as EmployerEmailPayload);
+  const toEmail = isCandidateStatusPayload || isCandidateInvoicePayload
+    ? (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).candidateEmail
     : (payload as EmployerEmailPayload).employerEmail;
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -288,7 +340,9 @@ serve(async (req: Request) => {
   try {
     const payload = await req.json() as EmailPayload;
 
-    const isCandidatePayload = (payload as CandidateApplicationEmailPayload).recipientType === "candidate";
+    const recipientType = (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).recipientType;
+    const isCandidatePayload = recipientType === "candidate";
+    const isCandidateInvoicePayload = recipientType === "candidate_invoice";
 
     if (isCandidatePayload) {
       const candidatePayload = payload as CandidateApplicationEmailPayload;
@@ -300,6 +354,26 @@ serve(async (req: Request) => {
       }
 
       const result = await sendViaResend(candidatePayload);
+
+      return new Response(
+        JSON.stringify({ success: true, messageId: result.id }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (isCandidateInvoicePayload) {
+      const invoicePayload = payload as CandidateInvoiceEmailPayload;
+      if (!invoicePayload.candidateEmail || !invoicePayload.invoiceNo || !invoicePayload.paymentId || !invoicePayload.amount || !invoicePayload.planName) {
+        return new Response(
+          JSON.stringify({ error: "Missing required fields: candidateEmail, invoiceNo, paymentId, amount, planName" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const result = await sendViaResend(invoicePayload);
 
       return new Response(
         JSON.stringify({ success: true, messageId: result.id }),

@@ -123,14 +123,18 @@ const Register = () => {
     }
   };
 
-  const submit = async () => {
+  const submit = async (acceptedFromDialog = false) => {
     if (!validateFinalStep()) {
       return;
     }
 
-    if (!hasAcceptedTerms) {
+    if (!acceptedFromDialog && !hasAcceptedTerms) {
       toast.error("Please confirm the terms and conditions to continue");
       return;
+    }
+
+    if (acceptedFromDialog) {
+      setHasAcceptedTerms(true);
     }
 
     try {
@@ -471,7 +475,7 @@ const Register = () => {
         </AnimatePresence>
       </div>
 
-      <AlertDialog open={isTermsOpen} onOpenChange={setIsTermsOpen}>
+      <AlertDialog open={isTermsOpen} onOpenChange={handleTermsOpenChange}>
         <AlertDialogContent className="max-w-2xl max-h-[85vh] overflow-hidden">
           <AlertDialogHeader>
             <AlertDialogTitle>Terms & Conditions</AlertDialogTitle>
@@ -506,7 +510,7 @@ const Register = () => {
 
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={submit} disabled={isSubmitting}>
+            <AlertDialogAction onClick={() => void submit(true)} disabled={isSubmitting}>
               {isSubmitting ? "Registering..." : "I Accept"}
             </AlertDialogAction>
           </AlertDialogFooter>

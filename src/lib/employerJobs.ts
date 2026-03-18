@@ -261,6 +261,44 @@ export const sendCandidateApplicationStatusEmail = async (payload: {
   }
 };
 
+export const sendCandidateInvoiceEmail = async (payload: {
+  candidateEmail: string;
+  candidateName: string;
+  invoiceNo: string;
+  paymentId: string;
+  amount: string;
+  planName: string;
+  paidAt: string;
+  status: string;
+}) => {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-employer-email`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          recipientType: "candidate_invoice",
+          ...payload,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to send candidate invoice email");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Candidate invoice email error:", error);
+    throw error;
+  }
+};
+
 // Update job status and send approval/rejection email
 export const updateJobStatusWithEmail = async (jobId: string, newStatus: "approved" | "rejected", rejectionReason?: string) => {
   // Fetch job details
