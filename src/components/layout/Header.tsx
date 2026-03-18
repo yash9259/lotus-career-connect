@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Briefcase } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -14,16 +16,28 @@ const navLinks = [
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    setMobileOpen(false);
+    navigate("/");
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary/10 via-cyan-400/10 to-primary/10" />
+      <div className="container relative z-10 flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Briefcase className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="Hare Krishna Job Placement"
+            className="h-9 w-9 rounded-lg object-cover"
+          />
           <span className="text-lg font-bold text-foreground tracking-tight">
-            HK Job Placement
+            Hare Krishna Job Placement
           </span>
         </Link>
 
@@ -51,14 +65,29 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Login
-            </Button>
-          </Link>
-          <Link to="/register">
-            <Button size="sm">Get Started</Button>
-          </Link>
+          {user ? (
+            <>
+              <Link to={user.role === "admin" ? "/admin" : "/dashboard"}>
+                <Button variant="ghost" size="sm">
+                  {user.role === "admin" ? "Admin Panel" : "Dashboard"}
+                </Button>
+              </Link>
+              <Button size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm">Get Started</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -95,12 +124,31 @@ const Header = () => {
                 </Link>
               ))}
               <div className="flex gap-3 mt-3 px-4">
-                <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" className="w-full">Login</Button>
-                </Link>
-                <Link to="/register" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full">Register</Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      to={user.role === "admin" ? "/admin" : "/dashboard"}
+                      className="flex-1"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Button variant="outline" className="w-full">
+                        {user.role === "admin" ? "Admin" : "Dashboard"}
+                      </Button>
+                    </Link>
+                    <Button className="w-full flex-1" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link to="/register" className="flex-1" onClick={() => setMobileOpen(false)}>
+                      <Button className="w-full">Register</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>

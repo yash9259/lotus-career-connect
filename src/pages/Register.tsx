@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
@@ -8,6 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -15,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, Upload, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const steps = ["Personal Information", "Contact & Education", "Declaration"];
 
@@ -25,6 +37,12 @@ const jobInterests = [
 
 const Register = () => {
   const [step, setStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const currentDate = new Date().toISOString().slice(0, 10);
   const [formData, setFormData] = useState({
     fullName: "", gender: "", dob: "", maritalStatus: "", languages: "",
     email: "", password: "", confirmPassword: "", mobile: "", fatherMobile: "",
@@ -71,12 +89,100 @@ const Register = () => {
     setStep((s) => Math.min(s + 1, 2));
   };
 
-  const submit = () => {
+  const validateFinalStep = () => {
     if (!formData.declaration) {
       toast.error("Please accept the declaration");
+      return false;
+    }
+
+    if (!formData.fullName || !formData.email || !formData.password || !formData.mobile) {
+      toast.error("Please fill in all required fields");
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
+
+    return true;
+  };
+
+  const openTermsDialog = () => {
+    if (!validateFinalStep()) {
       return;
     }
-    toast.success("Registration submitted! Please check your email for verification.");
+
+    setIsTermsOpen(true);
+  };
+
+  const handleTermsOpenChange = (open: boolean) => {
+    setIsTermsOpen(open);
+    if (!open) {
+      setHasAcceptedTerms(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!validateFinalStep()) {
+      return;
+    }
+
+    if (!hasAcceptedTerms) {
+      toast.error("Please confirm the terms and conditions to continue");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setIsTermsOpen(false);
+      const result = await register({
+        email: formData.email,
+        password: formData.password,
+        termsAcceptedAt: new Date().toISOString(),
+        profile: {
+          fullName: formData.fullName,
+          gender: formData.gender,
+          dob: formData.dob,
+          maritalStatus: formData.maritalStatus,
+          languages: formData.languages,
+          mobile: formData.mobile,
+          fatherMobile: formData.fatherMobile,
+          presentAddress: formData.presentAddress,
+          permanentAddress: formData.permanentAddress,
+          highestEducation: formData.highestEducation,
+          lastCompany: formData.lastCompany,
+          currentDesignation: formData.currentDesignation,
+          totalExperience: formData.totalExperience,
+          lastSalary: formData.lastSalary,
+          expectedSalary: formData.expectedSalary,
+          jobInterests: formData.jobInterests,
+          familyRefName: formData.familyRefName,
+          familyRefContact: formData.familyRefContact,
+          friendRefName: formData.friendRefName,
+          friendRefContact: formData.friendRefContact,
+        },
+        resumeFile: formData.resume,
+        signatureFile: formData.signature,
+      });
+      if (result.requiresEmailConfirmation) {
+        if (formData.resume || formData.signature) {
+          toast.success("Registration complete. Verify your email first, then upload resume and signature from your dashboard.");
+        } else {
+          toast.success("Registration complete. Please verify your email, then sign in.");
+        }
+        navigate("/login");
+        return;
+      }
+
+      toast.success(`Registration complete. Welcome, ${result.user.fullName}!`);
+      navigate("/dashboard");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to complete registration";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -125,7 +231,7 @@ const Register = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Registration Date</Label>
-                    <Input value={new Date().toLocaleDateString("en-IN")} disabled className="mt-1.5 h-11 bg-muted" />
+                    <Input value={currentDate} disabled className="mt-1.5 h-11 bg-muted" />
                   </div>
                   <div>
                     <Label>Full Name *</Label>
@@ -320,7 +426,7 @@ const Register = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Current Date</Label>
-                    <Input value={new Date().toLocaleDateString("en-IN")} disabled className="mt-1.5 h-11 bg-muted" />
+                    <Input value={currentDate} disabled className="mt-1.5 h-11 bg-muted" />
                   </div>
                   <div>
                     <Label>Upload Signature</Label>
@@ -356,12 +462,56 @@ const Register = () => {
                   Next <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={submit}>Submit Registration</Button>
+                <Button onClick={openTermsDialog} disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Registration"}
+                </Button>
               )}
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <AlertDialog open={isTermsOpen} onOpenChange={setIsTermsOpen}>
+        <AlertDialogContent className="max-w-2xl max-h-[85vh] overflow-hidden">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terms & Conditions</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please read and accept the following terms and conditions to complete your registration.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="overflow-y-auto pr-1 space-y-4 text-sm text-muted-foreground">
+            <div>
+              <h3 className="text-base font-semibold text-foreground mb-2">Hare Krishna Job Placement Terms & Conditions</h3>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li>Our Membership fee is RS.200/-</li>
+                <li>Membership Fee is Non Refundable.</li>
+                <li>Membership Fee is valid for 1 Year Only.</li>
+                <li>Membership Fee Will Be Renewable after 1 year.</li>
+                <li>We can arrange the Interview for the Job but can not give guarantee for the selection.</li>
+                <li>After getting the job, the candidate will have to give CTC (Cost To Company) 50% of his first fully month (30 Days included) salary.</li>
+                <li>After getting the job once, the membership will be cancelled automatically.</li>
+                <li>Every time new procedure will be held for every new job.</li>
+                <li>In case of default in paying the agreed consulting fee to Hare Krishna Job Placement, I shall be liable to legal action and my job offer might be withdrawn.</li>
+                <li>Registration will not be changed to any another person in any case.</li>
+                <li>Subject to Gujarat Jurisdiction.</li>
+              </ol>
+            </div>
+
+            <div className="rounded-lg border border-border bg-surface p-4 space-y-2">
+              <p className="text-foreground font-medium">Date: {currentDate}</p>
+              <p>By clicking "I Accept", you agree to all the terms and conditions mentioned above.</p>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={submit} disabled={isSubmitting}>
+              {isSubmitting ? "Registering..." : "I Accept"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };

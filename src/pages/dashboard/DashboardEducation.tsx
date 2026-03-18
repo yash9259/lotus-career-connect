@@ -1,34 +1,89 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { mockCandidate, type EducationEntry } from "@/lib/mockData";
+import type { EducationEntry } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Plus, Trash2, GraduationCap } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { addEducationEntry, deleteEducationEntry, listEducationEntries } from "@/lib/candidateDashboard";
 
 const DashboardEducation = () => {
-  const [entries, setEntries] = useState<EducationEntry[]>(mockCandidate.education);
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<EducationEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ degree: "", institution: "", year: "", percentage: "" });
 
-  const addEntry = () => {
+  const loadEntries = async (showLoading = true) => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      if (showLoading) {
+        setIsLoading(true);
+      }
+      setEntries(await listEducationEntries(user.id));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to load education");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadEntries();
+  }, [user?.id]);
+
+  const addEntry = async () => {
     if (!form.degree || !form.institution) {
       toast.error("Please fill in required fields");
       return;
     }
-    setEntries((prev) => [
-      ...prev,
-      { id: `e${Date.now()}`, ...form },
-    ]);
-    setForm({ degree: "", institution: "", year: "", percentage: "" });
-    setShowForm(false);
-    toast.success("Education added");
+
+    if (!user?.id) {
+      return;
+    }
+
+    const optimisticEntry: EducationEntry = {
+      id: `temp-${Date.now()}`,
+      degree: form.degree,
+      institution: form.institution,
+      year: form.year,
+      percentage: form.percentage,
+    };
+
+    try {
+      setEntries((prev) => [optimisticEntry, ...prev]);
+      await addEducationEntry(user.id, form);
+      setForm({ degree: "", institution: "", year: "", percentage: "" });
+      setShowForm(false);
+      toast.success("Education added");
+      void loadEntries(false);
+    } catch (error) {
+      setEntries((prev) => prev.filter((entry) => entry.id !== optimisticEntry.id));
+      toast.error(error instanceof Error ? error.message : "Unable to add education");
+    }
   };
 
-  const removeEntry = (id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-    toast.success("Entry removed");
+  const removeEntry = async (id: string) => {
+    if (!user?.id) {
+      return;
+    }
+
+    const previousEntries = entries;
+
+    try {
+      setEntries((prev) => prev.filter((entry) => entry.id !== id));
+      await deleteEducationEntry(user.id, id);
+      toast.success("Entry removed");
+    } catch (error) {
+      setEntries(previousEntries);
+      toast.error(error instanceof Error ? error.message : "Unable to remove education");
+    }
   };
 
   return (
@@ -72,7 +127,18 @@ const DashboardEducation = () => {
       )}
 
       <div className="space-y-3">
-        {entries.length === 0 ? (
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-card rounded-xl shadow-card p-5 flex items-start gap-4">
+              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+          ))
+        ) : entries.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
             No education entries yet. Click "Add" to get started.
           </div>

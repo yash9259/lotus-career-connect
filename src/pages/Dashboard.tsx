@@ -1,17 +1,39 @@
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/ui/StatCard";
-import { mockJobs, mockApplications } from "@/lib/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, FileCheck, Bookmark, Phone, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
+import { getDashboardOverview, type DashboardOverview } from "@/lib/candidateDashboard";
 
 const Dashboard = () => {
-  const approvedJobs = mockJobs.filter((j) => j.status === "approved");
+  const { user } = useAuth();
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const loadOverview = async () => {
+      try {
+        setIsLoading(true);
+        setOverview(await getDashboardOverview(user.id));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadOverview();
+  }, [user?.id]);
 
   const stats = [
-    { label: "Total Jobs", value: approvedJobs.length, icon: Briefcase },
-    { label: "Applied Jobs", value: mockApplications.length, icon: FileCheck },
-    { label: "Saved Jobs", value: 1, icon: Bookmark },
-    { label: "Interview Calls", value: mockApplications.filter((a) => a.status === "interview").length, icon: Phone },
+    { label: "Total Jobs", value: overview?.totalJobs ?? 0, icon: Briefcase },
+    { label: "Applied Jobs", value: overview?.appliedJobs ?? 0, icon: FileCheck },
+    { label: "Saved Jobs", value: overview?.savedJobs ?? 0, icon: Bookmark },
+    { label: "Interview Calls", value: overview?.interviewCalls ?? 0, icon: Phone },
   ];
 
   const statusColor = (s: string) => {
@@ -26,12 +48,19 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Dashboard</h1>
-      <p className="text-sm text-muted-foreground mb-6">Welcome back, Arjun Sharma</p>
+      <p className="text-sm text-muted-foreground mb-6">
+        Welcome back, {user?.fullName ?? "Candidate"}
+      </p>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        {stats.map((s) => (
-          <StatCard key={s.label} {...s} />
-        ))}
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-xl shadow-card p-5 space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-16" />
+              </div>
+            ))
+          : stats.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
       {/* Recent Applications */}
@@ -43,7 +72,18 @@ const Dashboard = () => {
           </Link>
         </div>
         <div className="space-y-2">
-          {mockApplications.slice(0, 3).map((app) => (
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-xl shadow-card p-4 space-y-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+                <div className="flex justify-between gap-3">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                </div>
+              </div>
+            ))
+          ) : overview && overview.recentApplications.length > 0 ? overview.recentApplications.map((app) => (
             <div
               key={app.id}
               className="bg-card rounded-xl shadow-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
@@ -59,16 +99,25 @@ const Dashboard = () => {
                 </span>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="bg-card rounded-xl shadow-card p-4 text-sm text-muted-foreground">
+              No applications yet.
+            </div>
+          )}
         </div>
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Link to="/dashboard/jobs" className="bg-card rounded-xl shadow-card p-5 hover:shadow-card-hover transition-shadow">
           <Briefcase className="h-5 w-5 text-primary mb-2" />
           <h3 className="text-sm font-semibold text-foreground">Browse Jobs</h3>
           <p className="text-xs text-muted-foreground mt-1">Find new opportunities</p>
+        </Link>
+        <Link to="/dashboard/saved-jobs" className="bg-card rounded-xl shadow-card p-5 hover:shadow-card-hover transition-shadow">
+          <Bookmark className="h-5 w-5 text-primary mb-2" />
+          <h3 className="text-sm font-semibold text-foreground">Saved Jobs</h3>
+          <p className="text-xs text-muted-foreground mt-1">Review bookmarked jobs</p>
         </Link>
         <Link to="/dashboard/profile" className="bg-card rounded-xl shadow-card p-5 hover:shadow-card-hover transition-shadow">
           <FileCheck className="h-5 w-5 text-primary mb-2" />

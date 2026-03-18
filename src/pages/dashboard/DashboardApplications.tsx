@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { mockApplications } from "@/lib/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Calendar, Building2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { listCandidateApplications, type DashboardApplicationItem } from "@/lib/candidateDashboard";
 
 const statusTabs = [
   { value: "all", label: "All" },
@@ -22,11 +25,41 @@ const statusColor = (s: string) => {
 };
 
 const DashboardApplications = () => {
+  const { user } = useAuth();
   const [tab, setTab] = useState("all");
+  const [applications, setApplications] = useState<DashboardApplicationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const loadApplications = async () => {
+      try {
+        setIsLoading(true);
+        setApplications(await listCandidateApplications(user.id));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to load applications");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadApplications();
+
+    const intervalId = window.setInterval(() => {
+      void loadApplications();
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [user?.id]);
 
   const filtered = tab === "all"
-    ? mockApplications
-    : mockApplications.filter((a) => a.status === tab);
+    ? applications
+    : applications.filter((a) => a.status === tab);
 
   return (
     <DashboardLayout>
@@ -42,7 +75,7 @@ const DashboardApplications = () => {
               {t.label}
               {t.value !== "all" && (
                 <span className="ml-1.5 text-xs tabular-nums">
-                  ({mockApplications.filter((a) => t.value === "all" || a.status === t.value).length})
+                  ({applications.filter((a) => t.value === "all" || a.status === t.value).length})
                 </span>
               )}
             </TabsTrigger>
@@ -50,7 +83,25 @@ const DashboardApplications = () => {
         </TabsList>
 
         <TabsContent value={tab} className="space-y-3">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-xl shadow-card p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-4 w-full max-w-md" />
+                  </div>
+                  <Skeleton className="h-7 w-28 rounded-full" />
+                </div>
+                <Skeleton className="h-2 w-full" />
+                <div className="flex justify-between gap-2">
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))
+          ) : filtered.length === 0 ? (
             <p className="text-center py-12 text-muted-foreground text-sm">
               No applications found.
             </p>

@@ -1,31 +1,69 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import JobCard from "@/components/jobs/JobCard";
 import JobFilters from "@/components/jobs/JobFilters";
-import { mockJobs } from "@/lib/mockData";
+import type { Job } from "@/lib/mockData";
+import { listApprovedJobs } from "@/lib/candidateDashboard";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { checkCandidatePaymentVerified } from "@/lib/candidateDashboard";
 
 const ITEMS_PER_PAGE = 5;
 
 const Jobs = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [city, setCity] = useState("All Cities");
   const [experience, setExperience] = useState("Any Experience");
   const [category, setCategory] = useState("All Categories");
   const [page, setPage] = useState(1);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const approvedJobs = mockJobs.filter((j) => j.status === "approved");
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        setIsLoading(true);
+        const nextJobs = await listApprovedJobs({ keyword, city, experience, category });
+        setJobs(nextJobs);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to load jobs");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filtered = approvedJobs.filter((job) => {
-    if (keyword && !job.position.toLowerCase().includes(keyword.toLowerCase())) return false;
-    if (city !== "All Cities" && job.location !== city) return false;
-    return true;
-  });
+    loadJobs();
+  }, [keyword, city, experience, category]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(jobs.length / ITEMS_PER_PAGE);
+  const paginated = jobs.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const handleApply = async () => {
+    if (!user?.id) {
+      navigate("/login");
+      return;
+    }
+
+    if (user.role !== "candidate") {
+      toast.error("Only candidates can apply for jobs.");
+      return;
+    }
+
+    const hasPaid = await checkCandidatePaymentVerified(user.id);
+    if (!hasPaid) {
+      toast.error("Please complete payment to apply for jobs.");
+      navigate("/dashboard/payment");
+      return;
+    }
+
+    navigate("/dashboard/jobs");
+  };
 
   return (
     <Layout>
@@ -34,7 +72,7 @@ const Jobs = () => {
           Browse Jobs
         </h1>
         <p className="text-muted-foreground mb-6">
-          {filtered.length} open positions
+          {jobs.length} open positions
         </p>
 
         <JobFilters
@@ -49,16 +87,19 @@ const Jobs = () => {
         />
 
         <div className="mt-6 space-y-3">
-          {paginated.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              No jobs found matching your criteria.
+          {isLoading ? (
+            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-[150px] rounded-xl" />)
+          ) : paginated.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground space-y-2">
+              <p>No jobs found matching your criteria.</p>
+              <p className="text-xs">Only admin-approved jobs are visible on this page.</p>
             </div>
           ) : (
             paginated.map((job) => (
               <JobCard
                 key={job.id}
                 job={job}
-                onApply={() => toast.info("Please login to apply")}
+                onApply={handleApply}
                 onSave={() => toast.info("Please login to save jobs")}
               />
             ))

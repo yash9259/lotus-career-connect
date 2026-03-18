@@ -71,3 +71,56 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Candidate Auth: Phase-Wise Backend Plan
+
+This project now includes a Phase-1 candidate auth backend simulation in the frontend (localStorage + route guards) so you can test login/register immediately.
+
+### Phase 1 (Implemented now): Local backend simulation
+
+- Candidate register saves user data in `localStorage`.
+- Candidate login checks saved credentials and creates a session token.
+- Admin login is supported with:
+	- Email: `admin@hkjobs.com`
+	- Password: `admin123`
+- Protected routes:
+	- Candidate routes: `/dashboard/*`
+	- Admin route: `/admin`
+
+### Phase 2: Real Auth API (Node/Express + PostgreSQL)
+
+- Create APIs:
+	- `POST /api/auth/register-candidate`
+	- `POST /api/auth/login`
+	- `POST /api/auth/logout`
+	- `GET /api/auth/me`
+- Replace localStorage user store with DB tables:
+	- `users`
+	- `candidate_profiles`
+	- `sessions` (optional when using refresh tokens)
+- Use password hashing (`bcrypt`) and JWT access/refresh tokens.
+
+### Phase 3: Candidate Profile Domain APIs
+
+- Create candidate CRUD APIs:
+	- `GET /api/candidate/profile`
+	- `PUT /api/candidate/profile`
+	- `POST /api/candidate/resume`
+	- `PUT /api/candidate/education`
+	- `PUT /api/candidate/experience`
+	- `PUT /api/candidate/references`
+- Move registration flow fields into normalized profile tables.
+
+### Phase 4: Security + Verification
+
+- Add email verification OTP.
+- Add password reset flow.
+- Add login throttling and account lock policy.
+- Add audit logs for auth and profile updates.
+
+### Phase 5: Production Hardening
+
+- Add API validation (Zod/class-validator) and centralized error handling.
+- Add observability (request logs + metrics).
+- Add integration tests for auth and profile routes.
+- Add CI checks for lint, tests, and migrations.

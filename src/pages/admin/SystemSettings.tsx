@@ -1,0 +1,71 @@
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const SystemSettings = () => {
+  return (
+    <section className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">System Settings</h1>
+        <p className="text-sm text-muted-foreground">Admin profile, email settings, and website settings</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Admin Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Name</Label>
+              <Input className="mt-1.5" defaultValue="Platform Admin" />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input className="mt-1.5" defaultValue="admin@hkjobs.com" />
+            </div>
+            <Button onClick={() => toast.success("Admin profile saved")}>Save</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Email Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>SMTP Host</Label>
+              <Input className="mt-1.5" defaultValue="smtp.mailserver.com" />
+            </div>
+            <div>
+              <Label>Sender Email</Label>
+              <Input className="mt-1.5" defaultValue="noreply@hkjobs.com" />
+            </div>
+            <Button onClick={() => toast.success("Email settings saved")}>Save</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Website Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Site Name</Label>
+              <Input className="mt-1.5" defaultValue="HK Job Placement" />
+            </div>
+            <div>
+              <Label>Support Contact</Label>
+              <Input className="mt-1.5" defaultValue="+91-9000000000" />
+            </div>
+            <Button onClick={() => toast.success("Website settings saved")}>Save</Button>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+};
+
+export default SystemSettings;

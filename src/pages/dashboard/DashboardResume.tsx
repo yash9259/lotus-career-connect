@@ -1,57 +1,124 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { mockCandidate } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Upload, FileText, Trash2, CheckCircle2, Download } from "lucide-react";
-
-interface ResumeFile {
-  id: string;
-  name: string;
-  size: string;
-  uploadedAt: string;
-  isActive: boolean;
-}
+import { useAuth } from "@/hooks/use-auth";
+import {
+  getResumeDownloadUrl,
+  listResumes,
+  removeResume,
+  setActiveResume,
+  type ResumeItem,
+  uploadResume,
+} from "@/lib/candidateDashboard";
 
 const DashboardResume = () => {
-  const [resumes, setResumes] = useState<ResumeFile[]>([
-    {
-      id: "r1",
-      name: mockCandidate.resumeFileName,
-      size: "245 KB",
-      uploadedAt: "2026-03-01",
-      isActive: true,
-    },
-  ]);
+  const { user } = useAuth();
+  const [resumes, setResumes] = useState<ResumeItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const loadResumes = async (showLoading = true) => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      if (showLoading) {
+        setIsLoading(true);
+      }
+      setResumes(await listResumes(user.id));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to load resumes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadResumes();
+  }, [user?.id]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File must be under 5MB");
       return;
     }
-    const newResume: ResumeFile = {
-      id: `r${Date.now()}`,
+
+    if (!user?.id) {
+      return;
+    }
+
+    const optimisticResume: ResumeItem = {
+      id: `temp-${Date.now()}`,
       name: file.name,
-      size: `${Math.round(file.size / 1024)} KB`,
-      uploadedAt: new Date().toISOString().split("T")[0],
-      isActive: false,
+      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      uploadedAt: new Date().toISOString().slice(0, 10),
+      isActive: true,
+      filePath: "",
     };
-    setResumes((prev) => [...prev, newResume]);
-    toast.success("Resume uploaded successfully");
+
+    try {
+      setIsUploading(true);
+      setResumes((prev) => [optimisticResume, ...prev.map((resume) => ({ ...resume, isActive: false }))]);
+      const uploadedResume = await uploadResume(user.id, file);
+      setResumes((prev) => [uploadedResume, ...prev.filter((resume) => resume.id !== optimisticResume.id)]);
+      toast.success("Resume updated and set as active");
+      void loadResumes(false);
+    } catch (error) {
+      setResumes((prev) => prev.filter((resume) => resume.id !== optimisticResume.id));
+      toast.error(error instanceof Error ? error.message : "Unable to upload resume");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
   };
 
-  const setActive = (id: string) => {
-    setResumes((prev) =>
-      prev.map((r) => ({ ...r, isActive: r.id === id }))
-    );
-    toast.success("Active resume updated");
+  const setActive = async (id: string) => {
+    if (!user?.id) {
+      return;
+    }
+
+    const previousResumes = resumes;
+
+    try {
+      setResumes((prev) => prev.map((resume) => ({ ...resume, isActive: resume.id === id })));
+      await setActiveResume(user.id, id);
+      toast.success("Active resume updated");
+    } catch (error) {
+      setResumes(previousResumes);
+      toast.error(error instanceof Error ? error.message : "Unable to update active resume");
+    }
   };
 
-  const removeResume = (id: string) => {
-    setResumes((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Resume removed");
+  const handleRemoveResume = async (id: string, filePath: string) => {
+    if (!user?.id) {
+      return;
+    }
+
+    const previousResumes = resumes;
+
+    try {
+      setResumes((prev) => prev.filter((resume) => resume.id !== id));
+      await removeResume(user.id, id, filePath);
+      toast.success("Resume removed");
+    } catch (error) {
+      setResumes(previousResumes);
+      toast.error(error instanceof Error ? error.message : "Unable to remove resume");
+    }
+  };
+
+  const downloadResume = async (filePath: string) => {
+    try {
+      const url = await getResumeDownloadUrl(filePath);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to download resume");
+    }
   };
 
   return (
@@ -66,19 +133,43 @@ const DashboardResume = () => {
       {/* Upload area */}
       <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-8 bg-surface cursor-pointer hover:border-primary/40 transition-colors mb-6">
         <Upload className="h-8 w-8 text-muted-foreground mb-3" />
-        <p className="text-sm font-medium text-foreground">Click to upload resume</p>
-        <p className="text-xs text-muted-foreground mt-1">PDF, DOC, DOCX — max 5MB</p>
+        <p className="text-sm font-medium text-foreground">
+          {isUploading ? "Uploading latest resume..." : resumes.length > 0 ? "Upload updated resume" : "Click to upload resume"}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          PDF, DOC, DOCX — max 5MB. New uploads become your active resume.
+        </p>
         <input
           type="file"
           accept=".pdf,.doc,.docx"
           className="hidden"
+          disabled={isUploading}
           onChange={handleUpload}
         />
       </label>
 
       {/* Resume list */}
       <div className="space-y-3">
-        {resumes.map((resume) => (
+        {isLoading ? (
+          Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="bg-card rounded-xl shadow-card p-5 flex items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-9 w-20" />
+                <Skeleton className="h-9 w-9" />
+                <Skeleton className="h-9 w-9" />
+              </div>
+            </div>
+          ))
+        ) : resumes.length === 0 ? (
+          <div className="bg-card rounded-xl shadow-card p-5 text-sm text-muted-foreground">
+            No resumes uploaded yet.
+          </div>
+        ) : resumes.map((resume) => (
           <div
             key={resume.id}
             className={`bg-card rounded-xl shadow-card p-5 flex items-center gap-4 ${
@@ -105,10 +196,10 @@ const DashboardResume = () => {
                   Set Active
                 </Button>
               )}
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => downloadResume(resume.filePath)}>
                 <Download className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => removeResume(resume.id)} className="text-muted-foreground hover:text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => handleRemoveResume(resume.id, resume.filePath)} className="text-muted-foreground hover:text-destructive">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

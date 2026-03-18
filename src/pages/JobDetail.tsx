@@ -1,7 +1,9 @@
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
-import { mockJobs } from "@/lib/mockData";
+import type { Job } from "@/lib/mockData";
+import { getApprovedJobById, listRecentApprovedJobs } from "@/lib/candidateDashboard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,13 +12,60 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import JobCard from "@/components/jobs/JobCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { checkCandidatePaymentVerified } from "@/lib/candidateDashboard";
 
 const JobDetail = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { id } = useParams();
-  const job = mockJobs.find((j) => j.id === id && j.status === "approved");
-  const similarJobs = mockJobs
-    .filter((j) => j.status === "approved" && j.id !== id)
-    .slice(0, 3);
+  const [job, setJob] = useState<Job | null>(null);
+  const [allApprovedJobs, setAllApprovedJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadJob = async () => {
+      if (!id) {
+        setJob(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const [jobData, jobs] = await Promise.all([
+          getApprovedJobById(id),
+          listRecentApprovedJobs(8),
+        ]);
+        setJob(jobData);
+        setAllApprovedJobs(jobs);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to load job");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadJob();
+  }, [id]);
+
+  const similarJobs = useMemo(
+    () => allApprovedJobs.filter((j) => j.id !== id).slice(0, 3),
+    [allApprovedJobs, id],
+  );
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container py-8 sm:py-10 space-y-4">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-[300px] rounded-xl" />
+          <Skeleton className="h-[240px] rounded-xl" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!job) {
     return (
@@ -41,6 +90,27 @@ const JobDetail = () => {
     { icon: GraduationCap, label: "Qualification", value: job.qualification },
     { icon: Calendar, label: "Posted", value: `${postedDays} day${postedDays !== 1 ? "s" : ""} ago` },
   ];
+
+  const handleApply = async () => {
+    if (!user?.id) {
+      navigate("/login");
+      return;
+    }
+
+    if (user.role !== "candidate") {
+      toast.error("Only candidates can apply for jobs.");
+      return;
+    }
+
+    const hasPaid = await checkCandidatePaymentVerified(user.id);
+    if (!hasPaid) {
+      toast.error("Please complete payment to apply for jobs.");
+      navigate("/dashboard/payment");
+      return;
+    }
+
+    navigate("/dashboard/jobs");
+  };
 
   return (
     <Layout>
@@ -93,7 +163,7 @@ const JobDetail = () => {
                 <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-border">
                   <Button
                     size="lg"
-                    onClick={() => toast.info("Please login to apply")}
+                    onClick={handleApply}
                   >
                     Apply Now
                   </Button>
@@ -206,7 +276,7 @@ const JobDetail = () => {
                     <JobCard
                       key={j.id}
                       job={j}
-                      onApply={() => toast.info("Please login to apply")}
+                      onApply={handleApply}
                       onSave={() => toast.info("Please login to save")}
                     />
                   ))}
@@ -255,7 +325,7 @@ const JobDetail = () => {
 
               <Button
                 className="w-full mt-6"
-                onClick={() => toast.info("Please login to apply")}
+                onClick={handleApply}
               >
                 Apply Now
               </Button>

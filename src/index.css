@@ -15,28 +15,28 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 28 87% 62%;
+    --primary: 317 73% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 98%;
+    --secondary: 197 92% 96%;
     --secondary-foreground: 222 47% 11%;
 
     --muted: 210 20% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 28 87% 95%;
-    --accent-foreground: 28 87% 35%;
+    --accent: 314 72% 95%;
+    --accent-foreground: 317 73% 30%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 28 87% 62%;
+    --ring: 317 73% 36%;
 
     --radius: 0.75rem;
 
-    --surface: 210 20% 98%;
+    --surface: 300 20% 98%;
     --success: 152 69% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
@@ -44,12 +44,12 @@
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 28 87% 62%;
+    --sidebar-primary: 317 73% 36%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 28 87% 95%;
-    --sidebar-accent-foreground: 28 87% 35%;
+    --sidebar-accent: 314 72% 95%;
+    --sidebar-accent-foreground: 317 73% 30%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 28 87% 62%;
+    --sidebar-ring: 317 73% 36%;
 
     --shadow-card: 0 0 0 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05);
     --shadow-card-hover: 0 0 0 1px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.08);
@@ -62,19 +62,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 28 87% 62%;
+    --primary: 314 70% 58%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 28 87% 15%;
-    --accent-foreground: 28 87% 80%;
+    --accent: 314 40% 18%;
+    --accent-foreground: 314 75% 84%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 28 87% 62%;
+    --ring: 314 70% 58%;
     --surface: 222 47% 10%;
   }
 }

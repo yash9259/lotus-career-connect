@@ -1,21 +1,56 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Briefcase, Users, Building2, ArrowRight } from "lucide-react";
+import { Search, Briefcase, Building2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Layout from "@/components/layout/Layout";
 import JobCard from "@/components/jobs/JobCard";
-import { mockJobs } from "@/lib/mockData";
+import type { Job } from "@/lib/mockData";
+import { listRecentApprovedJobs } from "@/lib/candidateDashboard";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const stats = [
-  { label: "Active Jobs", value: "1,248", icon: Briefcase },
-  { label: "Candidates", value: "3,420", icon: Users },
-  { label: "Companies", value: "186", icon: Building2 },
-];
+const formatCount = (value: number) => value.toLocaleString("en-IN");
 
 const Index = () => {
-  const approvedJobs = mockJobs.filter((j) => j.status === "approved").slice(0, 4);
+  const navigate = useNavigate();
+  const [approvedJobs, setApprovedJobs] = useState<Job[]>([]);
+  const [approvedJobsCount, setApprovedJobsCount] = useState(0);
+  const [stats, setStats] = useState([
+    { label: "Active Jobs", value: "0", icon: Briefcase },
+    { label: "Companies", value: "0", icon: Building2 },
+  ]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+
+  useEffect(() => {
+    const loadHomepageData = async () => {
+      try {
+        const [recentJobs, { count: candidateCount }, { count: approvedJobsTotal }, { data: companyRows }] = await Promise.all([
+          listRecentApprovedJobs(4),
+          supabase.from("candidate_profiles").select("user_id", { count: "exact", head: true }),
+          supabase.from("job_posts").select("id", { count: "exact", head: true }).eq("status", "approved"),
+          supabase.from("job_posts").select("company_name").eq("status", "approved"),
+        ]);
+
+        setApprovedJobs(recentJobs);
+        setApprovedJobsCount(approvedJobsTotal || 0);
+        const uniqueCompanies = new Set((companyRows || []).map((row) => row.company_name).filter(Boolean));
+
+        setStats([
+          { label: "Active Jobs", value: formatCount(approvedJobsTotal || 0), icon: Briefcase },
+          { label: "Companies", value: formatCount(uniqueCompanies.size), icon: Building2 },
+        ]);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to load homepage data");
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    };
+
+    loadHomepageData();
+  }, []);
 
   return (
     <Layout>
@@ -53,7 +88,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto"
+            className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto"
           >
             {stats.map((s) => (
               <div
@@ -74,9 +109,14 @@ const Index = () => {
       {/* Recent Jobs */}
       <section className="container py-12 sm:py-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
-            Recent Openings
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+              Recent Openings
+            </h2>
+            <span className="inline-flex items-center rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
+              Live Approved Jobs: {isLoadingJobs ? "..." : approvedJobsCount}
+            </span>
+          </div>
           <Link
             to="/jobs"
             className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
@@ -85,14 +125,22 @@ const Index = () => {
           </Link>
         </div>
         <div className="space-y-3">
-          {approvedJobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              onApply={() => toast.info("Please login to apply")}
-              onSave={() => toast.info("Please login to save jobs")}
-            />
-          ))}
+          {isLoadingJobs ? (
+            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-[150px] rounded-xl" />)
+          ) : approvedJobs.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+              No approved jobs available right now. Jobs appear here after admin approval.
+            </div>
+          ) : (
+            approvedJobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onApply={() => navigate("/login")}
+                onSave={() => toast.info("Please login to save jobs")}
+              />
+            ))
+          )}
         </div>
       </section>
 

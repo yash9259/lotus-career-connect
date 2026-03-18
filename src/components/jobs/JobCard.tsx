@@ -9,9 +9,41 @@ interface JobCardProps {
   showActions?: boolean;
   onApply?: (jobId: string) => void;
   onSave?: (jobId: string) => void;
+  isSaved?: boolean;
+  applicationStatus?: "applied" | "shortlisted" | "interview" | "rejected" | "hired" | "withdrawn";
+  isApplyPending?: boolean;
+  isSavePending?: boolean;
 }
 
-const JobCard = ({ job, showActions = true, onApply, onSave }: JobCardProps) => (
+const getApplicationButtonLabel = (status?: JobCardProps["applicationStatus"]) => {
+  switch (status) {
+    case "shortlisted":
+      return "Shortlisted";
+    case "interview":
+      return "Interview";
+    case "rejected":
+      return "Rejected";
+    case "hired":
+      return "Hired";
+    case "withdrawn":
+      return "Withdrawn";
+    case "applied":
+      return "Applied";
+    default:
+      return "Apply";
+  }
+};
+
+const JobCard = ({
+  job,
+  showActions = true,
+  onApply,
+  onSave,
+  isSaved = false,
+  applicationStatus,
+  isApplyPending = false,
+  isSavePending = false,
+}: JobCardProps) => (
   <motion.div
     whileHover={{ y: -2 }}
     transition={{ duration: 0.2 }}
@@ -45,17 +77,20 @@ const JobCard = ({ job, showActions = true, onApply, onSave }: JobCardProps) => 
       {showActions && (
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            variant={isSaved ? "secondary" : "outline"}
             size="sm"
+            disabled={isSavePending}
             onClick={() => onSave?.(job.id)}
           >
-            Save
+            {isSavePending ? "Saving..." : isSaved ? "Saved" : "Save"}
           </Button>
           <Button
             size="sm"
+            variant={applicationStatus ? "secondary" : "default"}
+            disabled={Boolean(applicationStatus) || isApplyPending}
             onClick={() => onApply?.(job.id)}
           >
-            Apply
+            {isApplyPending ? "Applying..." : getApplicationButtonLabel(applicationStatus)}
           </Button>
         </div>
       )}
