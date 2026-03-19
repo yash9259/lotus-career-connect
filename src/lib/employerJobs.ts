@@ -243,8 +243,8 @@ export const sendCandidateApplicationStatusEmail = async (payload: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          recipientType: "candidate",
           ...payload,
+          recipientType: "candidate",
         }),
       }
     );
@@ -262,7 +262,8 @@ export const sendCandidateApplicationStatusEmail = async (payload: {
 };
 
 export const sendCandidateInvoiceEmail = async (payload: {
-  candidateEmail: string;
+  candidateId: string;
+  candidateEmail?: string;
   candidateName: string;
   invoiceNo: string;
   paymentId: string;
@@ -281,8 +282,8 @@ export const sendCandidateInvoiceEmail = async (payload: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          recipientType: "candidate_invoice",
           ...payload,
+          recipientType: "candidate_invoice",
         }),
       }
     );

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,12 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "info@codinghunters.in";
 const SENDER_NAME = Deno.env.get("SENDER_NAME") || "Codinghunters";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+const adminClient = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  : null;
 
 interface EmployerEmailPayload {
   employerEmail: string;
@@ -47,7 +54,8 @@ interface CandidateApplicationEmailPayload {
 
 interface CandidateInvoiceEmailPayload {
   recipientType?: "candidate_invoice";
-  candidateEmail: string;
+  candidateId?: string;
+  candidateEmail?: string;
   candidateName: string;
   invoiceNo: string;
   paymentId: string;
@@ -58,6 +66,53 @@ interface CandidateInvoiceEmailPayload {
 }
 
 type EmailPayload = EmployerEmailPayload | CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload;
+
+const normalizeEmail = (value: string | null | undefined) => (value || "").trim().toLowerCase();
+
+const isCandidateStatusPayloadShape = (payload: EmailPayload) => {
+  const candidatePayload = payload as CandidateApplicationEmailPayload;
+  return Boolean(candidatePayload.candidateEmail && candidatePayload.applicationStatus && candidatePayload.jobPosition);
+};
+
+const isCandidateInvoicePayloadShape = (payload: EmailPayload) => {
+  const invoicePayload = payload as CandidateInvoiceEmailPayload;
+  return Boolean(invoicePayload.invoiceNo && invoicePayload.paymentId && invoicePayload.planName && invoicePayload.amount);
+};
+
+const resolveCandidateInvoiceEmail = async (payload: CandidateInvoiceEmailPayload): Promise<string> => {
+  const fallbackEmail = normalizeEmail(payload.candidateEmail);
+
+  if (!payload.candidateId || !adminClient) {
+    if (!fallbackEmail) {
+      throw new Error("Candidate registered email not found");
+    }
+    return fallbackEmail;
+  }
+
+  const { data, error } = await adminClient
+    .from("profiles")
+    .select("email")
+    .eq("id", payload.candidateId)
+    .maybeSingle();
+
+  if (error) {
+    if (fallbackEmail) {
+      return fallbackEmail;
+    }
+    throw new Error(error.message);
+  }
+
+  const registeredEmail = normalizeEmail(data?.email);
+  if (registeredEmail) {
+    return registeredEmail;
+  }
+
+  if (fallbackEmail) {
+    return fallbackEmail;
+  }
+
+  throw new Error("Candidate registered email not found");
+};
 
 const detailRow = (label: string, value: string | null | undefined) => {
   const safeValue = value && value.trim() ? value : "Not specified";
@@ -297,17 +352,19 @@ async function sendViaResend(payload: EmailPayload) {
   }
 
   const recipientType = (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).recipientType;
-  const isCandidateStatusPayload = recipientType === "candidate";
-  const isCandidateInvoicePayload = recipientType === "candidate_invoice";
+  const isCandidateStatusPayload = recipientType === "candidate" || isCandidateStatusPayloadShape(payload);
+  const isCandidateInvoicePayload = recipientType === "candidate_invoice" || isCandidateInvoicePayloadShape(payload);
 
   const template = isCandidateStatusPayload
     ? candidateEmailTemplate(payload as CandidateApplicationEmailPayload)
     : isCandidateInvoicePayload
       ? candidateInvoiceTemplate(payload as CandidateInvoiceEmailPayload)
       : emailTemplates[(payload as EmployerEmailPayload).emailType](payload as EmployerEmailPayload);
-  const toEmail = isCandidateStatusPayload || isCandidateInvoicePayload
-    ? (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).candidateEmail
-    : (payload as EmployerEmailPayload).employerEmail;
+  const toEmail = isCandidateStatusPayload
+    ? (payload as CandidateApplicationEmailPayload).candidateEmail
+    : isCandidateInvoicePayload
+      ? await resolveCandidateInvoiceEmail(payload as CandidateInvoiceEmailPayload)
+      : (payload as EmployerEmailPayload).employerEmail;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -341,8 +398,8 @@ serve(async (req: Request) => {
     const payload = await req.json() as EmailPayload;
 
     const recipientType = (payload as CandidateApplicationEmailPayload | CandidateInvoiceEmailPayload).recipientType;
-    const isCandidatePayload = recipientType === "candidate";
-    const isCandidateInvoicePayload = recipientType === "candidate_invoice";
+    const isCandidatePayload = recipientType === "candidate" || isCandidateStatusPayloadShape(payload);
+    const isCandidateInvoicePayload = recipientType === "candidate_invoice" || isCandidateInvoicePayloadShape(payload);
 
     if (isCandidatePayload) {
       const candidatePayload = payload as CandidateApplicationEmailPayload;
@@ -366,9 +423,9 @@ serve(async (req: Request) => {
 
     if (isCandidateInvoicePayload) {
       const invoicePayload = payload as CandidateInvoiceEmailPayload;
-      if (!invoicePayload.candidateEmail || !invoicePayload.invoiceNo || !invoicePayload.paymentId || !invoicePayload.amount || !invoicePayload.planName) {
+      if (!invoicePayload.invoiceNo || !invoicePayload.paymentId || !invoicePayload.amount || !invoicePayload.planName || !invoicePayload.candidateName) {
         return new Response(
-          JSON.stringify({ error: "Missing required fields: candidateEmail, invoiceNo, paymentId, amount, planName" }),
+          JSON.stringify({ error: "Missing required fields: candidateName, invoiceNo, paymentId, amount, planName" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

@@ -476,15 +476,15 @@ const Register = () => {
       </div>
 
       <AlertDialog open={isTermsOpen} onOpenChange={handleTermsOpenChange}>
-        <AlertDialogContent className="max-w-2xl max-h-[85vh] overflow-hidden">
-          <AlertDialogHeader>
+        <AlertDialogContent className="w-[95vw] max-w-xl sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col p-4 sm:p-6 gap-4">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>Terms & Conditions</AlertDialogTitle>
             <AlertDialogDescription>
               Please read and accept the following terms and conditions to complete your registration.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="overflow-y-auto pr-1 space-y-4 text-sm text-muted-foreground">
+          <div className="overflow-y-auto pr-3 sm:pr-4 space-y-4 text-sm text-muted-foreground flex-1">
             <div>
               <h3 className="text-base font-semibold text-foreground mb-2">Hare Krishna Job Placement Terms & Conditions</h3>
               <ol className="list-decimal pl-5 space-y-2">
@@ -502,15 +502,15 @@ const Register = () => {
               </ol>
             </div>
 
-            <div className="rounded-lg border border-border bg-surface p-4 space-y-2">
+            <div className="rounded-lg border border-border bg-surface p-3 sm:p-4 space-y-2">
               <p className="text-foreground font-medium">Date: {currentDate}</p>
               <p>By clicking "I Accept", you agree to all the terms and conditions mentioned above.</p>
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void submit(true)} disabled={isSubmitting}>
+          <AlertDialogFooter className="shrink-0 flex gap-2 sm:gap-3">
+            <AlertDialogCancel disabled={isSubmitting} className="flex-1 sm:flex-none">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void submit(true)} disabled={isSubmitting} className="flex-1 sm:flex-none">
               {isSubmitting ? "Registering..." : "I Accept"}
             </AlertDialogAction>
           </AlertDialogFooter>

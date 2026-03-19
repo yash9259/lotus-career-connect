@@ -27,6 +27,7 @@ const formatDate = (value: string | null | undefined) => {
 };
 
 const getInvoiceNo = (paymentId: string) => `INV-${paymentId.slice(0, 8).toUpperCase()}`;
+const normalizeEmail = (value: string | null | undefined) => (value || "").trim().toLowerCase();
 
 const statusBadge = (status: string) => {
   if (status === "verified") return "secondary" as const;
@@ -107,22 +108,60 @@ const PaymentsManagement = () => {
     [payments],
   );
 
-  const updatePaymentStatus = async (paymentId: string, nextStatus: "verified" | "rejected") => {
+  const sendInvoiceMail = async (
+    row: PaymentRow,
+    options?: { silentSuccess?: boolean },
+  ) => {
+    const candidateEmail = normalizeEmail(row.candidateEmail);
+    if (!candidateEmail) {
+      toast.error("Candidate registered email not found for this payment.");
+      return;
+    }
+
     try {
-      setStatusUpdatingId(paymentId);
+      setEmailSendingId(row.id);
+      await sendCandidateInvoiceEmail({
+        candidateId: row.candidateId,
+        candidateEmail,
+        candidateName: row.candidateName,
+        invoiceNo: getInvoiceNo(row.id),
+        paymentId: row.id,
+        amount: formatAmount(row.amount),
+        planName: row.planName,
+        paidAt: formatDate(row.createdAt),
+        status: row.status,
+      });
+
+      if (!options?.silentSuccess) {
+        toast.success("Invoice email sent successfully.");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send invoice email");
+    } finally {
+      setEmailSendingId(null);
+    }
+  };
+
+  const updatePaymentStatus = async (row: PaymentRow, nextStatus: "verified" | "rejected") => {
+    try {
+      setStatusUpdatingId(row.id);
       const { error } = await supabase
         .from("candidate_payments")
         .update({ status: nextStatus })
-        .eq("id", paymentId);
+        .eq("id", row.id);
 
       if (error) {
         throw error;
       }
 
       setPayments((prev) => prev.map((item) => (
-        item.id === paymentId ? { ...item, status: nextStatus } : item
+        item.id === row.id ? { ...item, status: nextStatus } : item
       )));
       toast.success(`Payment ${nextStatus === "verified" ? "accepted" : "rejected"}.`);
+
+      if (nextStatus === "verified") {
+        await sendInvoiceMail({ ...row, status: nextStatus }, { silentSuccess: true });
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update payment status");
     } finally {
@@ -148,6 +187,13 @@ const PaymentsManagement = () => {
             td { border: 1px solid #e5e7eb; padding: 10px; font-size: 14px; }
             .key { width: 220px; font-weight: 600; background: #f9fafb; }
           </style>
+          <script>
+            window.addEventListener('load', function () {
+              setTimeout(function () {
+                window.print();
+              }, 300);
+            });
+          </script>
         </head>
         <body>
           <div class="card">
@@ -167,7 +213,7 @@ const PaymentsManagement = () => {
       </html>
     `;
 
-    const popup = window.open("", "_blank", "noopener,noreferrer");
+    const popup = window.open("about:blank", "_blank");
     if (!popup) {
       toast.error("Please allow popups to view invoice PDF");
       return;
@@ -177,33 +223,6 @@ const PaymentsManagement = () => {
     popup.document.write(invoiceHtml);
     popup.document.close();
     popup.focus();
-    popup.print();
-  };
-
-  const sendInvoiceMail = async (row: PaymentRow) => {
-    if (!row.candidateEmail) {
-      toast.error("Candidate email not found for this payment.");
-      return;
-    }
-
-    try {
-      setEmailSendingId(row.id);
-      await sendCandidateInvoiceEmail({
-        candidateEmail: row.candidateEmail,
-        candidateName: row.candidateName,
-        invoiceNo: getInvoiceNo(row.id),
-        paymentId: row.id,
-        amount: formatAmount(row.amount),
-        planName: row.planName,
-        paidAt: formatDate(row.createdAt),
-        status: row.status,
-      });
-      toast.success("Invoice email sent successfully.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send invoice email");
-    } finally {
-      setEmailSendingId(null);
-    }
   };
 
   if (isLoading) {
@@ -242,6 +261,7 @@ const PaymentsManagement = () => {
                 </div>
                 <p className="text-muted-foreground">{row.planName} • {formatAmount(row.amount)}</p>
                 {row.candidateEmail && <p className="text-xs text-muted-foreground mt-1">{row.candidateEmail}</p>}
+                {!row.candidateEmail && <p className="text-xs text-destructive mt-1">Registered email missing</p>}
                 <p className="text-xs text-muted-foreground mt-1">Payment ID: {row.id} • {formatDate(row.createdAt)}</p>
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -268,7 +288,7 @@ const PaymentsManagement = () => {
                     <Button
                       size="sm"
                       disabled={statusUpdatingId === row.id}
-                      onClick={() => void updatePaymentStatus(row.id, "verified")}
+                      onClick={() => void updatePaymentStatus(row, "verified")}
                       className="gap-1.5"
                     >
                       <Check className="h-4 w-4" /> Accept
@@ -280,7 +300,7 @@ const PaymentsManagement = () => {
                       size="sm"
                       variant="destructive"
                       disabled={statusUpdatingId === row.id}
-                      onClick={() => void updatePaymentStatus(row.id, "rejected")}
+                      onClick={() => void updatePaymentStatus(row, "rejected")}
                       className="gap-1.5"
                     >
                       <X className="h-4 w-4" /> Reject
