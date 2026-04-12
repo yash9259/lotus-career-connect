@@ -10,9 +10,6 @@ import { listCandidateApplications, type DashboardApplicationItem } from "@/lib/
 const statusTabs = [
   { value: "all", label: "All" },
   { value: "applied", label: "Applied" },
-  { value: "shortlisted", label: "Shortlisted" },
-  { value: "interview", label: "Interview" },
-  { value: "rejected", label: "Rejected" },
 ];
 
 const statusColor = (s: string) => {

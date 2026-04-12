@@ -22,23 +22,81 @@ const PostJob = () => {
   const [form, setForm] = useState({
     companyName: "", position: "", vacancy: "", gender: "",
     experience: "", qualification: "", salaryMin: "", salaryMax: "",
-    jobTime: "", location: "", interviewName: "", interviewContact: "",
+    jobTime: "", jobStartTime: "", jobEndTime: "", location: "", interviewName: "", interviewContact: "",
     companyEmail: "", responsibilities: "",
   });
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  const sanitizeVacancy = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) {
+      return "";
+    }
+    const parsed = Number.parseInt(digits, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return "";
+    }
+    return String(Math.min(parsed, 99));
+  };
+
+  const sanitizePhone = (value: string) => value.replace(/\D/g, "").slice(0, 10);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.position || !form.location || !form.companyName || !form.companyEmail || !form.responsibilities) {
+    if (
+      !form.position ||
+      !form.location ||
+      !form.companyName ||
+      !form.companyEmail ||
+      !form.responsibilities ||
+      !form.gender ||
+      !form.vacancy ||
+      !form.jobTime ||
+      !form.jobStartTime ||
+      !form.jobEndTime ||
+      !form.interviewContact
+    ) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const vacancyNumber = Number.parseInt(form.vacancy, 10);
+    if (!Number.isFinite(vacancyNumber) || vacancyNumber < 1 || vacancyNumber > 99) {
+      toast.error("Total vacancy must be between 1 and 99");
+      return;
+    }
+
+    if (form.interviewContact.length !== 10) {
+      toast.error("Interview contact must be 10 digits");
+      return;
+    }
+
+    if (form.jobStartTime >= form.jobEndTime) {
+      toast.error("End time must be after start time");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const result = await submitEmployerJob(form);
+      const result = await submitEmployerJob({
+        companyName: form.companyName,
+        position: form.position,
+        vacancy: form.vacancy,
+        gender: form.gender,
+        experience: form.experience,
+        qualification: form.qualification,
+        salaryMin: form.salaryMin,
+        salaryMax: form.salaryMax,
+        jobTime: form.jobTime,
+        jobTimingDetails: `${form.jobStartTime} - ${form.jobEndTime}`,
+        location: form.location,
+        interviewName: form.interviewName,
+        interviewContact: form.interviewContact,
+        companyEmail: form.companyEmail,
+        responsibilities: form.responsibilities,
+      });
       setSubmitted(true);
       if (result.emailSent) {
         toast.success("Job submitted! Confirmation email sent to " + form.companyEmail);
@@ -145,14 +203,16 @@ const PostJob = () => {
                 <Input 
                   type="number" 
                   value={form.vacancy} 
-                  onChange={(e) => update("vacancy", e.target.value)} 
+                  onChange={(e) => update("vacancy", sanitizeVacancy(e.target.value))} 
                   className="mt-1.5 h-11" 
                   min="1"
+                  max="99"
                   placeholder="1"
                 />
+                <p className="mt-1 text-xs text-muted-foreground">Maximum 99 vacancies</p>
               </div>
               <div>
-                <Label>Gender Preference</Label>
+                <Label>Gender Preference *</Label>
                 <Select value={form.gender} onValueChange={(v) => update("gender", v)}>
                   <SelectTrigger className="mt-1.5 h-11"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
@@ -207,8 +267,30 @@ const PostJob = () => {
                     <SelectItem value="Full Time">Full Time</SelectItem>
                     <SelectItem value="Part Time">Part Time</SelectItem>
                     <SelectItem value="Shift Based">Shift Based</SelectItem>
+                    <SelectItem value="General Shift">General Shift</SelectItem>
+                    <SelectItem value="Night Shift">Night Shift</SelectItem>
+                    <SelectItem value="Rotational Shift">Rotational Shift</SelectItem>
+                    <SelectItem value="Flexible">Flexible</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>Start Time *</Label>
+                <Input
+                  type="time"
+                  value={form.jobStartTime}
+                  onChange={(e) => update("jobStartTime", e.target.value)}
+                  className="mt-1.5 h-11"
+                />
+              </div>
+              <div>
+                <Label>End Time *</Label>
+                <Input
+                  type="time"
+                  value={form.jobEndTime}
+                  onChange={(e) => update("jobEndTime", e.target.value)}
+                  className="mt-1.5 h-11"
+                />
               </div>
             </div>
 
@@ -247,12 +329,14 @@ const PostJob = () => {
                 />
               </div>
               <div>
-                <Label>Contact Number</Label>
+                <Label>Contact Number *</Label>
                 <Input 
                   value={form.interviewContact} 
-                  onChange={(e) => update("interviewContact", e.target.value)} 
+                  onChange={(e) => update("interviewContact", sanitizePhone(e.target.value))} 
                   className="mt-1.5 h-11"
                   placeholder="e.g. 9876543210"
+                  inputMode="numeric"
+                  maxLength={10}
                 />
               </div>
             </div>
@@ -280,7 +364,7 @@ const PostJob = () => {
                 onClick={() => setForm({
                   companyName: "", position: "", vacancy: "", gender: "",
                   experience: "", qualification: "", salaryMin: "", salaryMax: "",
-                  jobTime: "", location: "", interviewName: "", interviewContact: "",
+                  jobTime: "", jobStartTime: "", jobEndTime: "", location: "", interviewName: "", interviewContact: "",
                   companyEmail: "", responsibilities: "",
                 })}
               >

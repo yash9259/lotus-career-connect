@@ -29,12 +29,12 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary/10 via-cyan-400/10 to-primary/10" />
-      <div className="container relative z-10 flex h-16 items-center justify-between">
+      <div className="container relative z-10 flex h-24 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src="/logo.png"
             alt="Hare Krishna Job Placement"
-            className="h-9 w-9 rounded-lg object-cover"
+            className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg object-cover"
           />
           <span className="text-lg font-bold text-foreground tracking-tight">
             Hare Krishna Job Placement

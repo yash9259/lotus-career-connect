@@ -5,14 +5,18 @@ import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -39,6 +43,32 @@ const Login = () => {
       toast.error(message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      toast.error("Enter your email first");
+      return;
+    }
+
+    try {
+      setIsResetLoading(true);
+      const redirectTo = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast.success("Password reset link sent. Please check your email.");
+      setShowForgotPassword(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to send reset email");
+    } finally {
+      setIsResetLoading(false);
     }
   };
 
@@ -73,14 +103,51 @@ const Login = () => {
               />
             </div>
             <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 h-11"
-              />
+              <div className="flex items-center justify-between">
+                <Label>Password</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => setShowForgotPassword((prev) => !prev)}
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative mt-1.5">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
+
+            {showForgotPassword && (
+              <div className="rounded-lg border border-border bg-surface p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  We will send a password reset link to your email.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => void handleForgotPassword()}
+                  disabled={isResetLoading}
+                >
+                  {isResetLoading ? "Sending..." : "Send Reset Link"}
+                </Button>
+              </div>
+            )}
+
             <Button type="submit" className="w-full h-11" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>

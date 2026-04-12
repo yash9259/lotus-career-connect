@@ -10,6 +10,7 @@ export interface EmployerJobSubmissionInput {
   salaryMin: string;
   salaryMax: string;
   jobTime: string;
+  jobTimingDetails: string;
   location: string;
   interviewName: string;
   interviewContact: string;
@@ -47,8 +48,30 @@ const formatSalaryText = (min: number | null, max: number | null) => {
 export const submitEmployerJob = async (
   input: EmployerJobSubmissionInput,
 ): Promise<EmployerJobSubmissionResult> => {
+  if (!input.gender?.trim()) {
+    throw new Error("Gender preference is required");
+  }
+
+  if (!input.jobTime?.trim()) {
+    throw new Error("Job timing is required");
+  }
+
+  if (!input.jobTimingDetails?.trim()) {
+    throw new Error("Set timings is required");
+  }
+
+  if (!input.interviewContact?.trim()) {
+    throw new Error("Interview contact is required");
+  }
+
+  const vacancyParsed = Number.parseInt(input.vacancy, 10);
+  const vacancy = Number.isFinite(vacancyParsed)
+    ? Math.min(Math.max(vacancyParsed, 1), 99)
+    : 1;
+
   const salaryMin = parseSalary(input.salaryMin);
   const salaryMax = parseSalary(input.salaryMax);
+  const jobTimeText = `${input.jobTime.trim()} - ${input.jobTimingDetails.trim()}`;
 
   const { data: jobRow, error: jobError } = await supabase
     .from("job_posts")
@@ -56,19 +79,19 @@ export const submitEmployerJob = async (
       created_by: null,
       company_name: input.companyName.trim(),
       position: input.position.trim(),
-      vacancy: input.vacancy ? Number.parseInt(input.vacancy, 10) || 1 : 1,
-      gender: input.gender || null,
+      vacancy,
+      gender: input.gender.trim(),
       experience: input.experience.trim() || null,
       qualification: input.qualification.trim() || null,
       salary_min: salaryMin,
       salary_max: salaryMax,
       salary_range_text: formatSalaryText(salaryMin, salaryMax),
-      job_time: input.jobTime || null,
+      job_time: jobTimeText,
       location: input.location.trim(),
       responsibilities: input.responsibilities.trim() || null,
       description: input.responsibilities.trim() || null,
       interview_contact_name: input.interviewName.trim() || null,
-      interview_contact_number: input.interviewContact.trim() || null,
+      interview_contact_number: input.interviewContact.trim(),
       company_email: input.companyEmail.trim().toLowerCase(),
       status: "pending",
     })
@@ -114,7 +137,7 @@ export const submitEmployerJob = async (
         experience: input.experience || "Not specified",
         qualification: input.qualification || "Not specified",
         salaryRange,
-        jobTime: input.jobTime || "Not specified",
+        jobTime: jobTimeText,
         location: input.location || "Not specified",
         interviewName: input.interviewName || "Not specified",
         interviewContact: input.interviewContact || "Not specified",

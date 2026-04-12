@@ -174,7 +174,8 @@ const ApplicationsManagement = () => {
         item.id === application.id ? { ...item, status: nextStatus } : item
       )));
 
-      if (application.candidateEmail) {
+      // Only send email notification when status is "applied", not for other status changes
+      if (nextStatus === "applied" && application.candidateEmail) {
         try {
           await sendCandidateApplicationStatusEmail({
             candidateEmail: application.candidateEmail,
@@ -187,12 +188,10 @@ const ApplicationsManagement = () => {
           });
         } catch (emailError) {
           console.warn("Candidate status email failed:", emailError);
-          toast.warning("Status updated, but email notification failed");
-          return;
         }
       }
 
-      toast.success("Application status updated and candidate notified");
+      toast.success("Application status updated");
     } catch (error) {
       setStatusDraftById((prev) => ({ ...prev, [application.id]: application.status }));
       toast.error(error instanceof Error ? error.message : "Failed to update application status");

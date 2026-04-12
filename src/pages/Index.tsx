@@ -55,8 +55,15 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="bg-surface border-b border-border">
-        <div className="container py-16 sm:py-24">
+      <section className="relative border-b border-border overflow-hidden bg-surface">
+        <img
+          src="/hero.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-contain object-center opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/92 via-background/88 to-background/92" />
+        <div className="container relative z-10 py-16 sm:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -82,6 +89,7 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+
           </motion.div>
 
           <motion.div

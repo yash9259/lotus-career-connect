@@ -10,7 +10,7 @@ const Footer = () => (
             <img
               src="/logo.png"
               alt="Hare Krishna Job Placement"
-              className="h-8 w-8 rounded-lg object-cover"
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover"
             />
             <span className="text-base font-bold text-foreground">Hare Krishna Job Placement</span>
           </div>

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { sendCandidateApplicationStatusEmail } from "@/lib/employerJobs";
 import type { CandidateProfile as RegistrationCandidateProfile } from "@/lib/candidateAuth";
 import type { EducationEntry, ExperienceEntry, Job as MockJob } from "@/lib/mockData";
 
@@ -845,6 +846,37 @@ export const applyToJob = async (
       throw new Error("You already applied for this job");
     }
     throw new Error(error.message);
+  }
+
+  // Send application confirmation email to candidate
+  try {
+    const [candidateData, jobData] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", candidateId)
+        .single(),
+      supabase
+        .from("job_posts")
+        .select("id, position, company_name")
+        .eq("id", jobId)
+        .single(),
+    ]);
+
+    if (candidateData.data?.email && jobData.data) {
+      await sendCandidateApplicationStatusEmail({
+        candidateEmail: candidateData.data.email,
+        candidateName: candidateData.data.full_name || "Candidate",
+        jobPosition: jobData.data.position,
+        companyName: jobData.data.company_name,
+        applicationStatus: "applied",
+        applicationId: jobId,
+        jobId: jobId,
+      });
+    }
+  } catch (emailError) {
+    console.warn("Application confirmation email failed:", emailError);
+    // Don't throw - application was successful, just email notification failed
   }
 };
 
