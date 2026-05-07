@@ -356,7 +356,7 @@ export const updateJobStatusWithEmail = async (jobId: string, newStatus: "approv
       emailType: newStatus === "approved" ? "approved" : "rejected",
       jobId,
       rejectionReason,
-      jobLink: newStatus === "approved" ? `https://lotus-career-connect.com/jobs/${jobId}` : undefined,
+      jobLink: newStatus === "approved" ? `https://harekrishnajobplacement.com/jobs/${jobId}` : undefined,
     });
   } catch (emailError) {
     console.warn("Email sending failed (job status updated):", emailError);

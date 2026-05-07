@@ -9,8 +9,8 @@ import { useAuth } from "@/hooks/use-auth";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/jobs", label: "Browse Jobs" },
-  { to: "/post-job", label: "Post a Job" },
-  { to: "/register", label: "Register" },
+  { to: "/about", label: "About Us" },
+  { to: "/contact", label: "Contact Us" },
 ];
 
 const Header = () => {

@@ -20,16 +20,16 @@ This app now sends professional emails to employers when they submit jobs and wh
    - Value: re_xxxxxxxxxxxxx
 4. Create another secret:
    - Name: RESEND_FROM_EMAIL
-   - Value: noreply@lotus-career-connect.com
+   - Value: noreply@harekrishnajobplacement.com
 
 # Option B: Via CLI
 supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxx
-supabase secrets set RESEND_FROM_EMAIL=noreply@lotus-career-connect.com
+supabase secrets set RESEND_FROM_EMAIL=noreply@harekrishnajobplacement.com
 ```
 
 ### 3. Deploy Edge Function
 ```bash
-cd /path/to/lotus-career-connect
+cd /path/to/harekrishnajobplacement
 supabase functions deploy send-employer-email
 ```
 
@@ -164,7 +164,7 @@ The Edge Function automatically reads the secrets (no frontend access needed to 
 
 ## Next Steps (Optional)
 
-1. **Custom email domain:** Use custom domain in Resend instead of `noreply@lotus-career-connect.com`
+1. **Custom email domain:** Use custom domain in Resend instead of `noreply@harekrishnajobplacement.com`
 2. **Email templates:** Customize HTML templates in Edge Function
 3. **Additional emails:** Send emails to candidates on application status changes
 4. **Email tracking:** Add Resend webhook to track open/click rates

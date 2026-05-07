@@ -34,6 +34,8 @@ import ApplicationsManagement from "./pages/admin/ApplicationsManagement";
 import PaymentsManagement from "./pages/admin/PaymentsManagement";
 import NotificationsSystem from "./pages/admin/NotificationsSystem";
 import SystemSettings from "./pages/admin/SystemSettings";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +56,8 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/post-job" element={<PostJob />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
 
             <Route element={<RequireCandidateAuth />}>
               <Route path="/dashboard" element={<Dashboard />} />

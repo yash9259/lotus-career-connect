@@ -202,7 +202,7 @@ const emailTemplates = {
             </table>
 
             <div style="margin: 18px 0 4px;">
-              <a href="${data.jobLink || "https://lotus-career-connect.com/jobs"}" style="background-color: #166534; color: #ffffff; padding: 11px 18px; border-radius: 8px; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 600;">
+              <a href="${data.jobLink || "https://harekrishnajobplacement.com/jobs"}" style="background-color: #166534; color: #ffffff; padding: 11px 18px; border-radius: 8px; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 600;">
                 View Your Job Listing
               </a>
             </div>

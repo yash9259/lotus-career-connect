@@ -33,6 +33,13 @@ const Footer = () => (
           </ul>
         </div>
         <div>
+          <h4 className="text-sm font-semibold text-foreground mb-3">Company</h4>
+          <ul className="space-y-2">
+            <li><Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link></li>
+            <li><Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link></li>
+          </ul>
+        </div>
+        <div>
           <h4 className="text-sm font-semibold text-foreground mb-3">Contact Us</h4>
           <div className="space-y-2.5">
             <p className="text-sm text-muted-foreground">

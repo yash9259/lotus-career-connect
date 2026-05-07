@@ -1,4 +1,4 @@
--- Lotus Career Connect - Supabase schema
+-- Hare Krishna Job Placement - Supabase schema
 -- Run this in Supabase SQL Editor before wiring the frontend.
 -- Assumes Supabase Auth will manage login/register in auth.users.
 -- WARNING: This script now removes existing app tables, custom types, triggers,

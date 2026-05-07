@@ -53,7 +53,7 @@ Important email note:
 1. **Add Resend API Key to Supabase Secrets:**
    - Go to Supabase → Project Settings → Secrets
    - Create new secret: `RESEND_API_KEY` with your Resend API key (get from https://resend.com)
-   - Create new secret: `RESEND_FROM_EMAIL` with your sending email (e.g., `noreply@lotus-career-connect.com`)
+   - Create new secret: `RESEND_FROM_EMAIL` with your sending email (e.g., `noreply@harekrishnajobplacement.com`)
 
 2. **Deploy Edge Function:**
    ```bash
