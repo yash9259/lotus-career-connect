@@ -202,7 +202,7 @@ const JobDetail = () => {
                 <h2 className="text-base font-semibold text-foreground mb-3">
                   About the Role
                 </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {job.description}
                 </p>
               </div>
@@ -213,12 +213,17 @@ const JobDetail = () => {
                   Responsibilities
                 </h2>
                 <ul className="space-y-2">
-                  {job.responsibilities.split(". ").filter(Boolean).map((r, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>{r.endsWith(".") ? r : r + "."}</span>
-                    </li>
-                  ))}
+                  {(() => {
+                    const items = job.responsibilities.includes("\n")
+                      ? job.responsibilities.split("\n").map((r) => r.trim()).filter(Boolean).map((r) => r.replace(/^[-\*\s•]+/, "").trim())
+                      : job.responsibilities.split(". ").map((r) => r.trim()).filter(Boolean).map((r) => r.endsWith(".") ? r : r + ".");
+                    return items.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span className="whitespace-pre-line">{r}</span>
+                      </li>
+                    ));
+                  })()}
                 </ul>
               </div>
 

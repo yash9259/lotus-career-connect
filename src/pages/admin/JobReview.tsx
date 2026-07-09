@@ -213,7 +213,7 @@ const JobReview = () => {
                     {job.responsibilities && (
                       <div>
                         <p className="text-sm text-muted-foreground mb-2">Job Description:</p>
-                        <p className="text-sm text-foreground bg-surface/50 p-2 rounded line-clamp-3">
+                        <p className="text-sm text-foreground bg-surface/50 p-2 rounded line-clamp-3 whitespace-pre-line">
                           {job.responsibilities}
                         </p>
                       </div>
