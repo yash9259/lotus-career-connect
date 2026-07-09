@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase";
 import { updateJobStatusWithEmail } from "@/lib/employerJobs";
+import { EditJobDialog } from "@/components/jobs/EditJobDialog";
 
 interface JobRow {
   id: string;
@@ -24,6 +25,10 @@ const JobManagement = () => {
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  // Edit dialog state
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const loadJobs = async () => {
     const { data, error } = await supabase
@@ -44,12 +49,12 @@ const JobManagement = () => {
   const approved = useMemo(() => jobs.filter((j) => j.status === "approved"), [jobs]);
   const rejected = useMemo(() => jobs.filter((j) => j.status === "rejected"), [jobs]);
 
-  const updateStatus = async (job: JobRow, status: "approved" | "rejected") => {
+  const updateStatus = async (job: JobRow, status: "approved" | "rejected" | "pending") => {
     setProcessingId(job.id);
     try {
       await updateJobStatusWithEmail(job.id, status);
       setJobs((prev) => prev.map((j) => j.id === job.id ? { ...j, status } : j));
-      toast.success(`Job ${status}`);
+      toast.success(status === "pending" ? "Job un-approved (marked as pending)" : `Job ${status}`);
     } catch (err) {
       toast.error(`Failed to update job: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
@@ -87,11 +92,25 @@ const JobManagement = () => {
             <Link to={`/admin/job-review/${job.id}`}>
               <Button size="sm" variant="outline" disabled={busy}>Review</Button>
             </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                setEditingJobId(job.id);
+                setIsEditOpen(true);
+              }}
+            >
+              Edit Details
+            </Button>
             {job.status !== "approved" && (
-              <Button size="sm" disabled={busy} onClick={() => updateStatus(job, "approved")}>Approve</Button>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" disabled={busy} onClick={() => updateStatus(job, "approved")}>Approve</Button>
             )}
             {job.status !== "rejected" && (
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => updateStatus(job, "rejected")}>Reject</Button>
+              <Button size="sm" variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800" disabled={busy} onClick={() => updateStatus(job, "rejected")}>Reject</Button>
+            )}
+            {job.status !== "pending" && (
+              <Button size="sm" variant="outline" className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 hover:text-yellow-800" disabled={busy} onClick={() => updateStatus(job, "pending")}>Un-approve</Button>
             )}
             <Button size="sm" variant="destructive" disabled={busy} onClick={() => deleteJob(job.id)}>Delete</Button>
           </div>
@@ -136,6 +155,13 @@ const JobManagement = () => {
           {rejected.length === 0 ? <p className="text-sm text-muted-foreground">No rejected jobs.</p> : rejected.map(renderRow)}
         </TabsContent>
       </Tabs>
+
+      <EditJobDialog
+        jobId={editingJobId}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSave={loadJobs}
+      />
     </section>
   );
 };

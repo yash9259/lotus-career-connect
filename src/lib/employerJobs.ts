@@ -73,9 +73,12 @@ export const submitEmployerJob = async (
   const salaryMax = parseSalary(input.salaryMax);
   const jobTimeText = `${input.jobTime.trim()} - ${input.jobTimingDetails.trim()}`;
 
-  const { data: jobRow, error: jobError } = await supabase
+  const jobId = crypto.randomUUID();
+
+  const { error: jobError } = await supabase
     .from("job_posts")
     .insert({
+      id: jobId,
       created_by: null,
       company_name: input.companyName.trim(),
       position: input.position.trim(),
@@ -94,22 +97,20 @@ export const submitEmployerJob = async (
       interview_contact_number: input.interviewContact.trim(),
       company_email: input.companyEmail.trim().toLowerCase(),
       status: "pending",
-    })
-    .select("id, position, company_name, location, company_email")
-    .single();
+    });
 
   if (jobError) {
     throw new Error(jobError.message);
   }
 
   const { error: notificationError } = await supabase.from("notifications").insert({
-    title: `New employer job submission: ${jobRow.position}`,
+    title: `New employer job submission: ${input.position.trim()}`,
     body: [
-      `Company: ${jobRow.company_name}`,
-      `Position: ${jobRow.position}`,
-      `Location: ${jobRow.location}`,
-      `Employer Email: ${jobRow.company_email}`,
-      `Job ID: ${jobRow.id}`,
+      `Company: ${input.companyName.trim()}`,
+      `Position: ${input.position.trim()}`,
+      `Location: ${input.location.trim()}`,
+      `Employer Email: ${input.companyEmail.trim().toLowerCase()}`,
+      `Job ID: ${jobId}`,
     ].join("\n"),
     notification_type: "employer_job_submission",
     created_by: null,
@@ -130,7 +131,7 @@ export const submitEmployerJob = async (
       jobPosition: input.position.trim(),
       companyName: input.companyName.trim(),
       emailType: "submitted",
-      jobId: jobRow.id,
+      jobId: jobId,
       jobDetails: {
         vacancy: input.vacancy || "1",
         gender: input.gender || "Any",
@@ -152,7 +153,7 @@ export const submitEmployerJob = async (
   }
 
   return {
-    jobId: jobRow.id,
+    jobId: jobId,
     emailSent,
     emailError,
   };
@@ -324,7 +325,7 @@ export const sendCandidateInvoiceEmail = async (payload: {
 };
 
 // Update job status and send approval/rejection email
-export const updateJobStatusWithEmail = async (jobId: string, newStatus: "approved" | "rejected", rejectionReason?: string) => {
+export const updateJobStatusWithEmail = async (jobId: string, newStatus: "approved" | "rejected" | "pending", rejectionReason?: string) => {
   // Fetch job details
   const { data: jobRow, error: fetchError } = await supabase
     .from("job_posts")
@@ -346,22 +347,75 @@ export const updateJobStatusWithEmail = async (jobId: string, newStatus: "approv
     throw new Error(updateError.message);
   }
 
-  // Send email
-  try {
-    await sendEmployerEmail({
-      employerEmail: jobRow.company_email,
-      employerName: jobRow.interview_contact_name || "Employer",
-      jobPosition: jobRow.position,
-      companyName: jobRow.company_name,
-      emailType: newStatus === "approved" ? "approved" : "rejected",
-      jobId,
-      rejectionReason,
-      jobLink: newStatus === "approved" ? `https://harekrishnajobplacement.com/jobs/${jobId}` : undefined,
-    });
-  } catch (emailError) {
-    console.warn("Email sending failed (job status updated):", emailError);
-    // Don't fail the job update if email fails
+  // Send email only for approved or rejected status
+  if (newStatus !== "pending") {
+    try {
+      await sendEmployerEmail({
+        employerEmail: jobRow.company_email,
+        employerName: jobRow.interview_contact_name || "Employer",
+        jobPosition: jobRow.position,
+        companyName: jobRow.company_name,
+        emailType: newStatus === "approved" ? "approved" : "rejected",
+        jobId,
+        rejectionReason,
+        jobLink: newStatus === "approved" ? `https://harekrishnajobplacement.com/jobs/${jobId}` : undefined,
+      });
+    } catch (emailError) {
+      console.warn("Email sending failed (job status updated):", emailError);
+      // Don't fail the job update if email fails
+    }
   }
 
   return jobRow;
+};
+
+export interface UpdateJobInput {
+  companyName: string;
+  position: string;
+  vacancy: number;
+  gender: string;
+  experience: string | null;
+  qualification: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  jobTime: string;
+  location: string;
+  interviewName: string | null;
+  interviewContact: string;
+  companyEmail: string;
+  responsibilities: string;
+  status: "pending" | "approved" | "rejected" | "closed";
+}
+
+export const updateJobDetails = async (jobId: string, input: UpdateJobInput) => {
+  const salaryRangeText = formatSalaryText(input.salaryMin, input.salaryMax);
+  const { data, error } = await supabase
+    .from("job_posts")
+    .update({
+      company_name: input.companyName.trim(),
+      position: input.position.trim(),
+      vacancy: input.vacancy,
+      gender: input.gender.trim(),
+      experience: input.experience?.trim() || null,
+      qualification: input.qualification?.trim() || null,
+      salary_min: input.salaryMin,
+      salary_max: input.salaryMax,
+      salary_range_text: salaryRangeText,
+      job_time: input.jobTime.trim(),
+      location: input.location.trim(),
+      responsibilities: input.responsibilities.trim(),
+      description: input.responsibilities.trim(),
+      interview_contact_name: input.interviewName?.trim() || null,
+      interview_contact_number: input.interviewContact.trim(),
+      company_email: input.companyEmail.trim().toLowerCase(),
+      status: input.status,
+    })
+    .eq("id", jobId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
 };

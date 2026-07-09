@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { updateJobStatusWithEmail } from "@/lib/employerJobs";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { EditJobDialog } from "@/components/jobs/EditJobDialog";
 
 interface JobPost {
   id: string;
@@ -36,6 +38,7 @@ interface JobPost {
 }
 
 const JobReview = () => {
+  const { jobId } = useParams<{ jobId?: string }>();
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
@@ -43,6 +46,10 @@ const JobReview = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Edit dialog state
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const loadJobs = async () => {
     try {
@@ -64,6 +71,13 @@ const JobReview = () => {
   useEffect(() => {
     loadJobs();
   }, []);
+
+  useEffect(() => {
+    if (jobId) {
+      setEditingJobId(jobId);
+      setIsEditOpen(true);
+    }
+  }, [jobId]);
 
   const handleApprove = (job: JobPost) => {
     setSelectedJob(job);
@@ -215,6 +229,18 @@ const JobReview = () => {
 
                   <div className="flex flex-col gap-3">
                     <Button
+                      onClick={() => {
+                        setEditingJobId(job.id);
+                        setIsEditOpen(true);
+                      }}
+                      variant="outline"
+                      className="text-sm"
+                      disabled={isProcessing}
+                    >
+                      Edit Details
+                    </Button>
+
+                    <Button
                       onClick={() => handleApprove(job)}
                       variant="outline"
                       className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 text-sm"
@@ -256,18 +282,59 @@ const JobReview = () => {
             {approvedJobs.map((job) => (
               <div
                 key={job.id}
-                className="bg-card rounded-lg p-4 border border-green-200 flex items-center justify-between"
+                className="bg-card rounded-lg p-4 border border-green-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
-                  <p className="font-medium">{job.position}</p>
+                  <p className="font-medium text-foreground">{job.position}</p>
                   <p className="text-sm text-muted-foreground">
                     {job.company_name} • {job.location}
                   </p>
                 </div>
-                <Badge className="bg-green-100 text-green-800">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Approved
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-green-100 text-green-800 border-green-200 mr-2">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Approved
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingJobId(job.id);
+                      setIsEditOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 hover:text-yellow-800"
+                    disabled={isProcessing}
+                    onClick={async () => {
+                      try {
+                        setIsProcessing(true);
+                        await updateJobStatusWithEmail(job.id, "pending");
+                        toast.success("Job un-approved (marked as pending)");
+                        loadJobs();
+                      } catch (err) {
+                        toast.error("Failed to un-approve job");
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                  >
+                    Un-approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                    disabled={isProcessing}
+                    onClick={() => handleReject(job)}
+                  >
+                    Reject
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -289,18 +356,69 @@ const JobReview = () => {
             {rejectedJobs.map((job) => (
               <div
                 key={job.id}
-                className="bg-card rounded-lg p-4 border border-red-200 flex items-center justify-between"
+                className="bg-card rounded-lg p-4 border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
-                  <p className="font-medium">{job.position}</p>
+                  <p className="font-medium text-foreground">{job.position}</p>
                   <p className="text-sm text-muted-foreground">
                     {job.company_name} • {job.location}
                   </p>
                 </div>
-                <Badge className="bg-red-100 text-red-800">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  Rejected
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-red-100 text-red-800 border-red-200 mr-2">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    Rejected
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingJobId(job.id);
+                      setIsEditOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 hover:text-yellow-800"
+                    disabled={isProcessing}
+                    onClick={async () => {
+                      try {
+                        setIsProcessing(true);
+                        await updateJobStatusWithEmail(job.id, "pending");
+                        toast.success("Job marked as pending");
+                        loadJobs();
+                      } catch (err) {
+                        toast.error("Failed to update status");
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                  >
+                    Un-approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    disabled={isProcessing}
+                    onClick={async () => {
+                      try {
+                        setIsProcessing(true);
+                        await updateJobStatusWithEmail(job.id, "approved");
+                        toast.success("Job approved!");
+                        loadJobs();
+                      } catch (err) {
+                        toast.error("Failed to approve job");
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                  >
+                    Approve
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -353,6 +471,13 @@ const JobReview = () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditJobDialog
+        jobId={editingJobId}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSave={loadJobs}
+      />
     </div>
   );
 };
