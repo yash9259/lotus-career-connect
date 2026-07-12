@@ -336,6 +336,7 @@ const Register = () => {
         },
         resumeFile: formData.resume,
       });
+
       if (result.requiresEmailConfirmation) {
         toast.success("Registration complete. Please verify your email, then sign in.");
         navigate("/login");
