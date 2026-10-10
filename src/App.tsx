@@ -1,4 +1,6 @@
+import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,46 +9,58 @@ import RequireAdminAuth from "@/components/auth/RequireAdminAuth";
 import RequireCandidateAuth from "@/components/auth/RequireCandidateAuth";
 import { AuthProvider } from "@/hooks/use-auth";
 import Index from "./pages/Index";
-import Jobs from "./pages/Jobs";
-import JobDetail from "./pages/JobDetail";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-import ResetPassword from "./pages/ResetPassword";
-import PostJob from "./pages/PostJob";
-import Dashboard from "./pages/Dashboard";
-import DashboardJobs from "./pages/dashboard/DashboardJobs";
-import DashboardApplications from "./pages/dashboard/DashboardApplications";
-import DashboardSavedJobs from "./pages/dashboard/DashboardSavedJobs";
-import DashboardProfile from "./pages/dashboard/DashboardProfile";
-import DashboardEducation from "./pages/dashboard/DashboardEducation";
-import DashboardExperience from "./pages/dashboard/DashboardExperience";
-import DashboardResume from "./pages/dashboard/DashboardResume";
-import DashboardReferences from "./pages/dashboard/DashboardReferences";
-import DashboardPayment from "./pages/dashboard/DashboardPayment";
 import AdminLayout from "./components/layout/AdminLayout";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import JobManagement from "./pages/admin/JobManagement";
-import JobReview from "./pages/admin/JobReview";
-import CandidateManagement from "./pages/admin/CandidateManagement";
-import CandidateProfile from "./pages/admin/CandidateProfile";
-import ApplicationsManagement from "./pages/admin/ApplicationsManagement";
-import PaymentsManagement from "./pages/admin/PaymentsManagement";
-import NotificationsSystem from "./pages/admin/NotificationsSystem";
-import SystemSettings from "./pages/admin/SystemSettings";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ScrollToTop from "./components/layout/ScrollToTop";
+
+const Jobs = lazy(() => import("./pages/Jobs"));
+const JobDetail = lazy(() => import("./pages/JobDetail"));
+const Register = lazy(() => import("./pages/Register"));
+const Login = lazy(() => import("./pages/Login"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PostJob = lazy(() => import("./pages/PostJob"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardJobs = lazy(() => import("./pages/dashboard/DashboardJobs"));
+const DashboardApplications = lazy(() => import("./pages/dashboard/DashboardApplications"));
+const DashboardSavedJobs = lazy(() => import("./pages/dashboard/DashboardSavedJobs"));
+const DashboardProfile = lazy(() => import("./pages/dashboard/DashboardProfile"));
+const DashboardEducation = lazy(() => import("./pages/dashboard/DashboardEducation"));
+const DashboardExperience = lazy(() => import("./pages/dashboard/DashboardExperience"));
+const DashboardResume = lazy(() => import("./pages/dashboard/DashboardResume"));
+const DashboardReferences = lazy(() => import("./pages/dashboard/DashboardReferences"));
+const DashboardPayment = lazy(() => import("./pages/dashboard/DashboardPayment"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const JobManagement = lazy(() => import("./pages/admin/JobManagement"));
+const JobReview = lazy(() => import("./pages/admin/JobReview"));
+const CandidateManagement = lazy(() => import("./pages/admin/CandidateManagement"));
+const CandidateProfile = lazy(() => import("./pages/admin/CandidateProfile"));
+const ApplicationsManagement = lazy(() => import("./pages/admin/ApplicationsManagement"));
+const PaymentsManagement = lazy(() => import("./pages/admin/PaymentsManagement"));
+const NotificationsSystem = lazy(() => import("./pages/admin/NotificationsSystem"));
+const SystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 const queryClient = new QueryClient();
 
+const RouteFallback = () => (
+  <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-live="polite">
+    <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary motion-reduce:animate-none" />
+    <span className="sr-only">Loading page</span>
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <MotionConfig reducedMotion="user">
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/jobs" element={<Jobs />} />
@@ -90,9 +104,11 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+    </MotionConfig>
   </QueryClientProvider>
 );
 

@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "system-ui", "-apple-system", "'Segoe UI'", "sans-serif"],
+        display: ["Newsreader", "'Iowan Old Style'", "Georgia", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -23,6 +24,15 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         surface: "hsl(var(--surface))",
+        gold: "hsl(var(--gold))",
+        "plum-deep": "hsl(var(--plum-deep))",
+        brand: {
+          pink: "hsl(var(--brand-pink))",
+          orange: "hsl(var(--brand-orange))",
+          green: "hsl(var(--brand-green))",
+          blue: "hsl(var(--brand-blue))",
+          ink: "hsl(var(--brand-ink))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -79,6 +89,8 @@ export default {
       boxShadow: {
         card: "var(--shadow-card)",
         "card-hover": "var(--shadow-card-hover)",
+        premium: "var(--shadow-premium)",
+        glow: "var(--shadow-glow)",
       },
       keyframes: {
         "accordion-down": {
@@ -89,10 +101,26 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
+        "spin-slow": { to: { transform: "rotate(360deg)" } },
+        "spin-slow-rev": { to: { transform: "rotate(-360deg)" } },
+        "float-slow": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "float-slow": "float-slow 7s ease-in-out infinite",
+        marquee: "marquee 60s linear infinite",
+        "spin-slow": "spin-slow 120s linear infinite",
+        "spin-slow-rev": "spin-slow-rev 90s linear infinite",
       },
     },
   },

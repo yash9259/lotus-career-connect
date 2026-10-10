@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+/* Fonts (Plus Jakarta Sans + Newsreader) are loaded from index.html with preconnect + display=swap. */
 
 @tailwind base;
 @tailwind components;
@@ -6,76 +6,89 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Surfaces & ink */
+    --background: 300 10% 95%;
+    --foreground: 300 25% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 300 25% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 300 25% 11%;
 
-    --primary: 317 73% 36%;
+    /* Brand: plum from the logo wordmark */
+    --primary: 302 52% 33%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 197 92% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 300 16% 94%;
+    --secondary-foreground: 300 30% 14%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 300 10% 94%;
+    --muted-foreground: 300 8% 36%;
 
-    --accent: 314 72% 95%;
-    --accent-foreground: 317 73% 30%;
+    --accent: 300 28% 94%;
+    --accent-foreground: 302 52% 25%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 317 73% 36%;
+    --border: 300 10% 86%;
+    --input: 300 8% 60%;
+    --ring: 302 52% 42%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --surface: 300 20% 98%;
-    --success: 152 69% 40%;
+    --surface: 300 10% 95%;
+    --success: 152 69% 32%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 92% 44%;
     --warning-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 317 73% 36%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 314 72% 95%;
-    --sidebar-accent-foreground: 317 73% 30%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 317 73% 36%;
+    /* Logo palette, used only for decoration */
+    --brand-pink: 326 100% 46%;
+    --brand-orange: 16 86% 54%;
+    --brand-green: 88 52% 50%;
+    --brand-blue: 205 78% 58%;
+    --brand-ink: 300 40% 7%;
+    --gold: 38 50% 68%;
+    --plum-deep: 300 46% 10%;
 
-    --shadow-card: 0 0 0 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05);
-    --shadow-card-hover: 0 0 0 1px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.08);
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 300 12% 26%;
+    --sidebar-primary: 302 52% 33%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 300 28% 94%;
+    --sidebar-accent-foreground: 302 52% 25%;
+    --sidebar-border: 300 10% 86%;
+    --sidebar-ring: 302 52% 42%;
+
+    --shadow-card: 0 1px 2px hsl(300 40% 10% / 0.04);
+    --shadow-card-hover: 0 1px 2px hsl(300 40% 10% / 0.05), 0 8px 24px -12px hsl(300 40% 10% / 0.16);
+    --shadow-premium: 0 1px 2px hsl(300 40% 10% / 0.05), 0 10px 28px -14px hsl(300 40% 10% / 0.20);
+    --shadow-glow: 0 1px 2px hsl(300 40% 10% / 0.12);
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 314 70% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 314 40% 18%;
-    --accent-foreground: 314 75% 84%;
-    --destructive: 0 63% 31%;
+    --background: 300 30% 7%;
+    --foreground: 300 15% 96%;
+    --card: 300 26% 10%;
+    --card-foreground: 300 15% 96%;
+    --popover: 300 26% 10%;
+    --popover-foreground: 300 15% 96%;
+    --primary: 305 70% 76%;
+    --primary-foreground: 300 40% 8%;
+    --secondary: 300 16% 17%;
+    --secondary-foreground: 300 15% 96%;
+    --muted: 300 14% 15%;
+    --muted-foreground: 300 10% 70%;
+    --accent: 302 30% 20%;
+    --accent-foreground: 305 70% 88%;
+    --destructive: 0 63% 45%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 314 70% 58%;
-    --surface: 222 47% 10%;
+    --border: 300 14% 18%;
+    --input: 300 10% 40%;
+    --ring: 305 70% 76%;
+    --surface: 300 26% 11%;
   }
 }
 
@@ -84,9 +97,20 @@
     @apply border-border;
   }
 
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    overflow-x: clip;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -94,14 +118,172 @@
     letter-spacing: -0.02em;
   }
 
+  h1 {
+    font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+
   p {
     text-wrap: pretty;
     line-height: 1.6;
+  }
+
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+
+  /* Clear, consistent keyboard focus for links and custom controls */
+  a:focus-visible,
+  summary:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+    border-radius: 0.375rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Quiet section label: plain text, no pill */
+  .eyebrow {
+    @apply inline-block text-sm font-semibold text-primary;
+  }
+
+  .section-title {
+    @apply font-display text-3xl font-medium text-foreground sm:text-4xl;
+    letter-spacing: -0.015em;
+  }
+
+  .section-lead {
+    @apply mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg;
+  }
+
+  /* Short brass rule that marks the start of a section */
+  .section-rule {
+    display: block;
+    width: 2.5rem;
+    height: 2px;
+    margin-bottom: 1rem;
+    background: hsl(var(--gold));
+  }
+
+  .text-gradient-brand {
+    color: hsl(var(--primary));
+  }
+
+  .hero-mesh {
+    background: hsl(var(--surface));
+  }
+
+  /* Deep navy band with a very faint block-print lattice, a quiet nod to Kutch ajrakh */
+  .hero-ink {
+    position: relative;
+    isolation: isolate;
+    color: hsl(0 0% 100%);
+    background:
+      radial-gradient(44rem 24rem at 92% -10%, hsl(var(--brand-pink) / 0.22), transparent 62%),
+      linear-gradient(165deg, hsl(var(--plum-deep)) 0%, hsl(300 42% 17%) 100%);
+  }
+  .hero-ink::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1'%3E%3Cpath d='M28 4 52 28 28 52 4 28Z'/%3E%3Cpath d='M28 16 40 28 28 40 16 28Z'/%3E%3C/g%3E%3C/svg%3E");
+    -webkit-mask-image: linear-gradient(115deg, transparent 30%, #000 85%);
+    mask-image: linear-gradient(115deg, transparent 30%, #000 85%);
+  }
+
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+  .text-gradient-gold {
+    color: hsl(var(--gold));
+  }
+
+  /* Flat panel for use on navy bands */
+  .glass-dark {
+    background: hsl(0 0% 100% / 0.04);
+    border: 1px solid hsl(0 0% 100% / 0.14);
+    border-radius: var(--radius);
+  }
+
+  /* Secondary (outline) action on navy bands */
+  .chip-area {
+    @apply inline-flex items-center justify-center rounded-md border border-white/30 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--plum-deep))];
+  }
+
+  /* Bordered surface used for content blocks */
+  .card-premium {
+    @apply relative overflow-hidden rounded-lg border border-border bg-card shadow-card transition-colors duration-200;
+  }
+
+  /* Primary action on navy bands: brass fill */
+  .btn-gold {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-base font-semibold transition-colors duration-200 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--plum-deep))];
+    color: hsl(var(--plum-deep));
+    background: hsl(var(--gold));
+  }
+  .btn-gold:hover {
+    background: hsl(38 55% 76%);
+  }
+
+  .hairline-gold {
+    height: 1px;
+    background-image: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.7), transparent);
+  }
+
+  /* Thin strip in the five colours of the logo figures */
+  .brand-ribbon {
+    height: 3px;
+    background: linear-gradient(90deg,
+      hsl(var(--brand-orange)) 0 20%,
+      hsl(var(--brand-pink)) 20% 40%,
+      hsl(302 57% 40%) 40% 60%,
+      hsl(var(--brand-blue)) 60% 80%,
+      hsl(var(--brand-green)) 80% 100%);
+  }
+
+  .hairline-brand {
+    height: 1px;
+    background: hsl(var(--gold) / 0.7);
+  }
+
+  .skip-link {
+    @apply absolute left-4 top-4 z-[100] -translate-y-24 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-premium transition-transform focus:translate-y-0;
   }
 }
 
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

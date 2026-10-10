@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
+import Seo from "@/components/seo/Seo";
 import {
   LayoutDashboard,
   Briefcase,
@@ -54,7 +55,9 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-surface">
+      <Seo title="Admin" noindex />
+      <a href="#admin-main" className="skip-link">Skip to main content</a>
       <div className="flex-1 flex">
         <aside className="hidden lg:flex w-72 border-r border-border bg-card flex-col shrink-0">
           <div className="p-4 border-b border-border">
@@ -69,7 +72,7 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+          <nav aria-label="Admin" className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
             {links.map((link) => {
               const isActive = link.end ? location.pathname === link.to : location.pathname.startsWith(link.to);
 
@@ -98,7 +101,7 @@ const AdminLayout = () => {
           </div>
         </aside>
 
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border grid grid-cols-5 py-1.5 px-1 pb-[calc(0.4rem+env(safe-area-inset-bottom))]">
+        <nav aria-label="Admin mobile" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-border grid grid-cols-5 py-1.5 px-1 pb-[calc(0.4rem+env(safe-area-inset-bottom))]">
           {primaryMobileLinks.map((link) => {
             const isActive = link.end ? location.pathname === link.to : location.pathname.startsWith(link.to);
             return (
@@ -161,7 +164,7 @@ const AdminLayout = () => {
           </Sheet>
         </nav>
 
-        <main className="flex-1 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <main id="admin-main" tabIndex={-1} className="flex-1 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] focus:outline-none lg:pb-0">
           <div className="p-3 sm:p-6 lg:p-8 max-w-6xl">
           <Outlet />
           </div>

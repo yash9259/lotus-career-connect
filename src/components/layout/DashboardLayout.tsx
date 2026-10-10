@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import WhatsAppFloat from "./WhatsAppFloat";
+import Seo from "@/components/seo/Seo";
 
 const sidebarLinks = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -52,7 +53,9 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-surface">
+      <Seo title="Candidate Dashboard" noindex />
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <div className="flex-1 flex">
         {/* Sidebar - desktop */}
         <aside className="hidden lg:flex w-64 border-r border-border bg-card flex-col shrink-0">
@@ -158,7 +161,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         </nav>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <main id="dashboard-main" tabIndex={-1} className="flex-1 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] focus:outline-none lg:pb-0">
           <div className="p-3 sm:p-6 lg:p-8 max-w-5xl">
             {children}
           </div>

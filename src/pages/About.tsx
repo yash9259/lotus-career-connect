@@ -1,208 +1,218 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { CheckCircle2, Heart, Users, TrendingUp, Target, Compass, ShieldCheck, FileText, MapPin } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import { CheckCircle2, Target, Heart, Users, TrendingUp } from "lucide-react";
+import Seo, { getSiteUrl } from "@/components/seo/Seo";
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
+import { STATIC_ROUTES, absoluteUrl, breadcrumbSchema } from "@/lib/seoConfig";
+
+const aboutMeta = STATIC_ROUTES.find((route) => route.path === "/about")!;
+const aboutCrumbs = [{ label: "Home", to: "/" }, { label: "About Us" }];
+
+const values = [
+  {
+    title: "Integrity",
+    description: "Honesty and transparency in every connection we make.",
+    icon: CheckCircle2,
+  },
+  {
+    title: "Compassion",
+    description: "We listen to the needs and aspirations of each person we work with.",
+    icon: Heart,
+  },
+  {
+    title: "Service",
+    description: "We bridge the gap between talent and opportunity for our community.",
+    icon: Users,
+  },
+  {
+    title: "Excellence",
+    description: "High standards in our platform and in the support we give.",
+    icon: TrendingUp,
+  },
+];
+
+const howWeWork = [
+  { icon: ShieldCheck, text: "Every job is reviewed by our team before it goes live." },
+  { icon: FileText, text: "Employers post a job without creating an account." },
+  { icon: MapPin, text: "Based in Bhuj, Gujarat, with jobs from across India and worldwide." },
+];
 
 const About = () => {
-  const values = [
-    {
-      title: "Integrity",
-      description: "We uphold the highest standards of honesty and transparency in every connection we facilitate.",
-      icon: CheckCircle2,
-    },
-    {
-      title: "Compassion",
-      description: "Our approach is rooted in understanding the unique needs and aspirations of every individual.",
-      icon: Heart,
-    },
-    {
-      title: "Service",
-      description: "We are dedicated to serving our community by bridging the gap between talent and opportunity.",
-      icon: Users,
-    },
-    {
-      title: "Excellence",
-      description: "We strive for excellence in our platform's performance and the quality of support we provide.",
-      icon: TrendingUp,
-    },
-  ];
-
+  const siteUrl = getSiteUrl();
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="/about_hero.png"
-            alt="About Us Hero"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
-        </div>
-        <div className="container relative z-10 text-center text-white px-4">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl font-bold mb-6"
-          >
-            Empowering Careers, <br />
-            <span className="text-primary">Enriching Communities</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl max-w-2xl mx-auto text-gray-200"
-          >
-            Hare Krishna Job Placement is more than just a job portal. We are a bridge between 
-            dedicated professionals and organizations that value purpose-driven work.
-          </motion.p>
-        </div>
-      </section>
+      <Seo
+        title={aboutMeta.title}
+        description={aboutMeta.description}
+        jsonLd={[
+          breadcrumbSchema(siteUrl, aboutCrumbs),
+          {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            url: absoluteUrl(siteUrl, "/about"),
+            name: aboutMeta.title,
+            about: { "@id": `${siteUrl}/#organization` },
+            inLanguage: "en-IN",
+          },
+        ]}
+      />
 
-      {/* Our Story Section */}
-      <section className="py-20 bg-background">
-        <div className="container px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">Our Story</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  Founded in 2025 with a vision to create a centralized platform for the devotee community, 
-                  Hare Krishna Job Placement began as a humble initiative to help friends and family 
-                  find meaningful work within organizations that share their values.
-                </p>
-                <p>
-                  As the community grew, so did the need for a professional, scalable, and 
-                  efficient way to manage career opportunities. Today, we serve thousands of 
-                  candidates and hundreds of employers across various sectors, from non-profits 
-                  and educational institutions to corporate enterprises.
-                </p>
-                <p>
-                  Our mission remains unchanged: to facilitate connections that are not just 
-                  financially rewarding, but spiritually and professionally fulfilling.
-                </p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative rounded-2xl overflow-hidden shadow-2xl"
-            >
+      {/* Hero: copy on the left, framed image on the right */}
+      <section className="hero-ink overflow-hidden border-b border-white/10">
+        <div className="container grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-12 lg:py-24">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-7"
+          >
+            <PageBreadcrumbs items={aboutCrumbs} className="mb-8 [&_*]:!text-white/70 [&_[aria-current]]:!text-white" />
+            <span className="mb-6 block h-0.5 w-10 bg-gold" aria-hidden="true" />
+            <h1 className="text-4xl leading-[1.1] sm:text-5xl lg:text-[3.5rem]">
+              Empowering careers, enriching communities
+            </h1>
+            <p className="mt-7 max-w-xl text-base text-white/80 sm:text-lg">
+              Hare Krishna Job Placement is more than a job portal. We are a bridge between dedicated professionals and
+              organizations that value purpose-driven work.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link to="/jobs" className="btn-gold">Browse jobs</Link>
+              <Link to="/contact" className="chip-area h-12 px-6 text-base">Talk to our team</Link>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-full max-w-sm lg:col-span-5 lg:max-w-md"
+          >
+            <div className="rounded-lg border border-white/20 p-2">
               <img
-                src="/our_values.png"
-                alt="Our Values"
-                className="w-full h-full object-cover"
+                src="/about_hero.webp"
+                width={1024}
+                height={1024}
+                alt=""
+                aria-hidden="true"
+                className="aspect-[4/5] w-full rounded-md object-cover"
               />
-            </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Story */}
+      <section className="container py-20 sm:py-28" aria-labelledby="our-story">
+        <div className="grid gap-14 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <span className="section-rule" aria-hidden="true" />
+            <h2 id="our-story" className="section-title">Our story</h2>
+            <p className="mt-6 font-display text-2xl leading-snug text-primary sm:text-3xl">
+              Connections that are financially rewarding, and spiritually and professionally fulfilling.
+            </p>
+            <div className="relative mt-10 hidden lg:block">
+              <div className="absolute -inset-3 rounded-lg border border-gold/60" aria-hidden="true" />
+              <img
+                src="/our_values.webp"
+                width={1024}
+                height={1024}
+                alt="Illustration of the values that guide Hare Krishna Job Placement"
+                loading="lazy"
+                decoding="async"
+                className="relative aspect-square w-full rounded-md object-cover"
+              />
+            </div>
+          </div>
+          <div className="lg:col-span-7">
+            <div className="max-w-prose space-y-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              <p>
+                Hare Krishna Job Placement began as a humble initiative to help friends and family in the devotee
+                community find meaningful work within organizations that share their values.
+              </p>
+              <p>
+                As the community grew, so did the need for a professional and efficient way to manage career
+                opportunities. Today we connect candidates and employers across sectors, from non-profits and
+                educational institutions to businesses.
+              </p>
+              <p>Our mission has stayed the same: to make the right introduction between the right people.</p>
+            </div>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-3">
+              {howWeWork.map((item) => (
+                <li key={item.text} className="card-premium p-5">
+                  <item.icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium text-foreground">{item.text}</p>
+                </li>
+              ))}
+            </ul>
+            <img
+              src="/our_values.webp"
+              width={1024}
+              height={1024}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="mt-10 aspect-video w-full rounded-md object-cover lg:hidden"
+            />
           </div>
         </div>
       </section>
 
-
-      {/* Mission & Vision Section */}
-      <section className="py-20 bg-background">
-        <div className="container px-4">
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="bg-card p-8 rounded-2xl border border-border shadow-card"
-            >
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                <Target className="text-primary w-6 h-6" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
-              <p className="text-muted-foreground">
-                To connect talented individuals with opportunities that align with their skills 
-                and spiritual values, fostering a community of professionals dedicated to 
-                service and excellence.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-card p-8 rounded-2xl border border-border shadow-card"
-            >
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                <TrendingUp className="text-primary w-6 h-6" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
-              <p className="text-muted-foreground">
-                To become the premier global platform for career development within the 
-                devotee community, recognized for our integrity, innovation, and impact 
-                on lives.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Values Section */}
-      <section className="py-20 bg-surface">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Core Values</h2>
-            <p className="text-muted-foreground">
-              These principles guide everything we do, from the features we build to the 
-              way we interact with our users.
+      {/* Mission and vision on one dark panel */}
+      <section className="hero-ink" aria-label="Mission and vision">
+        <div className="container grid gap-12 py-16 sm:py-24 md:grid-cols-2">
+          <div>
+            <Target className="h-7 w-7 text-gold" aria-hidden="true" />
+            <h2 className="mt-5 font-display text-3xl font-medium sm:text-4xl">Our mission</h2>
+            <p className="mt-4 max-w-md text-white/80">
+              To connect talented individuals with opportunities that align with their skills and spiritual values,
+              building a community of professionals dedicated to service and excellence.
             </p>
           </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-card p-6 rounded-xl border border-border text-center hover:shadow-card-hover transition-shadow"
-              >
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <value.icon className="text-primary w-6 h-6" />
-                </div>
-                <h4 className="text-xl font-bold mb-3">{value.title}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {value.description}
-                </p>
-              </motion.div>
-            ))}
+          <div className="md:border-l md:border-white/15 md:pl-12">
+            <Compass className="h-7 w-7 text-gold" aria-hidden="true" />
+            <h2 className="mt-5 font-display text-3xl font-medium sm:text-4xl">Our vision</h2>
+            <p className="mt-4 max-w-md text-white/80">
+              To become a leading platform for career development in the devotee community, recognized for integrity,
+              innovation and impact on lives.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-primary text-white">
-        <div className="container px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Join Our Community?</h2>
-          <p className="text-xl mb-10 opacity-90 max-w-2xl mx-auto">
-            Whether you're looking for your dream job or the perfect candidate, 
-            Hare Krishna Job Placement is here to help you succeed.
+      {/* Values */}
+      <section className="container py-20 sm:py-28" aria-labelledby="core-values">
+        <div className="max-w-2xl">
+          <span className="section-rule" aria-hidden="true" />
+          <h2 id="core-values" className="section-title">Core values</h2>
+          <p className="section-lead">These principles guide the features we build and the way we treat everyone who uses them.</p>
+        </div>
+        <ul className="mt-12 grid overflow-hidden rounded-lg border border-border bg-card shadow-card sm:grid-cols-2 lg:grid-cols-4">
+          {values.map((value) => (
+            <li
+              key={value.title}
+              className="border-b border-border p-8 last:border-b-0 sm:[&:nth-child(odd)]:border-r lg:border-b-0 lg:border-r lg:last:border-r-0 lg:[&:nth-child(odd)]:border-r"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-gold">
+                <value.icon className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <h3 className="mt-6 font-display text-xl font-medium">{value.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* CTA */}
+      <section className="hero-ink">
+        <div className="container py-16 text-center sm:py-24">
+          <h2 className="mx-auto max-w-2xl font-display text-3xl font-medium sm:text-4xl">Ready to join our community?</h2>
+          <p className="mx-auto mt-5 max-w-xl text-white/75">
+            Whether you are looking for your next job or the right candidate, we are here to help.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/register"
-              className="bg-white text-primary px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors"
-            >
-              Get Started as Candidate
-            </a>
-            <a
-              href="/post-job"
-              className="bg-transparent border-2 border-white px-8 py-3 rounded-full font-bold hover:bg-white/10 transition-colors"
-            >
-              Post a Job Opening
-            </a>
+          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/register" className="btn-gold">Register as a candidate</Link>
+            <Link to="/post-job" className="chip-area h-12 justify-center px-6 text-base">Post a job opening</Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
+import Seo, { getSiteUrl } from "@/components/seo/Seo";
+import { STATIC_ROUTES, breadcrumbSchema } from "@/lib/seoConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,6 +118,7 @@ const PostJob = () => {
   if (submitted) {
     return (
       <Layout>
+        <Seo title="Job submitted" noindex />
         <div className="container py-16 sm:py-24 max-w-md text-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -138,8 +141,15 @@ const PostJob = () => {
     );
   }
 
+  const postJobMeta = STATIC_ROUTES.find((route) => route.path === "/post-job")!;
+
   return (
     <Layout>
+      <Seo
+        title={postJobMeta.title}
+        description={postJobMeta.description}
+        jsonLd={breadcrumbSchema(getSiteUrl(), [{ label: "Home", to: "/" }, { label: "Post a Job" }])}
+      />
       <div className="container py-10 sm:py-16 max-w-2xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Post a Job

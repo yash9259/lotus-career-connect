@@ -4,9 +4,14 @@ import Footer from "./Footer";
 import WhatsAppFloat from "./WhatsAppFloat";
 
 const Layout = ({ children }: { children: ReactNode }) => (
-  <div className="min-h-screen flex flex-col">
+  <div className="flex min-h-screen flex-col">
+    <a href="#main-content" className="skip-link">
+      Skip to main content
+    </a>
     <Header />
-    <main className="flex-1">{children}</main>
+    <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+      {children}
+    </main>
     <Footer />
     <WhatsAppFloat />
   </div>

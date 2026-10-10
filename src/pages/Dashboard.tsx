@@ -94,7 +94,7 @@ const Dashboard = () => {
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="text-xs text-muted-foreground tabular-nums">{app.appliedAt}</span>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${statusColor(app.status)}`}>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-md border ${statusColor(app.status)}`}>
                   {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                 </span>
               </div>

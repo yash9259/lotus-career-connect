@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
+import Seo from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ const ResetPassword = () => {
 
   return (
     <Layout>
+      <Seo title="Reset password" noindex />
       <div className="container py-16 sm:py-24 max-w-md">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

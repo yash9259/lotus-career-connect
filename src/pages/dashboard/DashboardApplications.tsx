@@ -129,7 +129,7 @@ const DashboardApplications = () => {
                     </div>
                   </div>
                   <span
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full border shrink-0 ${statusColor(app.status)}`}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-md border shrink-0 ${statusColor(app.status)}`}
                   >
                     {app.status === "interview" ? "Interview Scheduled" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                   </span>

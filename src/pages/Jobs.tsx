@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import PageHeader from "@/components/layout/PageHeader";
+import Seo from "@/components/seo/Seo";
+import { JOBS_FAQS, STATIC_ROUTES, breadcrumbSchema, faqSchema, itemListSchema, webPageSchema } from "@/lib/seoConfig";
+import FaqList from "@/components/seo/FaqList";
+import { getSiteUrl } from "@/components/seo/Seo";
 import JobCard from "@/components/jobs/JobCard";
 import JobFilters from "@/components/jobs/JobFilters";
 import type { Job } from "@/lib/mockData";
@@ -13,17 +18,24 @@ import { useAuth } from "@/hooks/use-auth";
 import { checkCandidatePaymentVerified } from "@/lib/candidateDashboard";
 
 const ITEMS_PER_PAGE = 5;
+const jobsMeta = STATIC_ROUTES.find((route) => route.path === "/jobs")!;
+const crumbs = [{ label: "Home", to: "/" }, { label: "Browse Jobs" }];
 
 const Jobs = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [keyword, setKeyword] = useState("");
+  const [searchParams] = useSearchParams();
+  const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
   const [city, setCity] = useState("All Cities");
   const [experience, setExperience] = useState("Any Experience");
   const [category, setCategory] = useState("All Categories");
   const [page, setPage] = useState(1);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setKeyword(searchParams.get("keyword") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -67,14 +79,39 @@ const Jobs = () => {
 
   return (
     <Layout>
-      <div className="container py-8 sm:py-12">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          Browse Jobs
-        </h1>
-        <p className="text-muted-foreground mb-6">
-          {jobs.length} open positions
-        </p>
-
+      <Seo
+        title={jobsMeta.title}
+        description={jobsMeta.description}
+        jsonLd={[
+          breadcrumbSchema(getSiteUrl(), crumbs),
+          webPageSchema(getSiteUrl(), {
+            path: "/jobs",
+            type: "CollectionPage",
+            name: jobsMeta.title,
+            description: jobsMeta.description,
+            speakable: ["#jobs-intro"],
+          }),
+          faqSchema(JOBS_FAQS),
+          ...(paginated.length ? [itemListSchema(getSiteUrl(), paginated)] : []),
+        ]}
+      />
+      <PageHeader
+        title="Browse Jobs"
+        crumbs={crumbs}
+        description={
+          <>
+            <span aria-live="polite" className="block font-semibold text-white">
+              {isLoading ? "Loading open positions..." : `${jobs.length} open positions`}
+            </span>
+            <span id="jobs-intro" className="mt-2 block">
+              Every job here is reviewed by our team before it is published. Search by keyword, city, experience or
+              category, then apply from your candidate dashboard.
+            </span>
+          </>
+        }
+      />
+      <div className="container grid gap-6 py-8 sm:py-12 lg:grid-cols-12 lg:items-start">
+        <aside className="lg:col-span-3">
         <JobFilters
           keyword={keyword}
           city={city}
@@ -85,12 +122,14 @@ const Jobs = () => {
           onExperienceChange={setExperience}
           onCategoryChange={setCategory}
         />
+        </aside>
 
-        <div className="mt-6 space-y-3">
+        <div className="lg:col-span-9">
+        <div className="space-y-4">
           {isLoading ? (
-            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-[150px] rounded-xl" />)
+            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-[130px] rounded-lg" />)
           ) : paginated.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground space-y-2">
+            <div className="space-y-2 rounded-lg border border-dashed border-border bg-card py-16 text-center text-muted-foreground">
               <p>No jobs found matching your criteria.</p>
               <p className="text-xs">Only admin-approved jobs are visible on this page.</p>
             </div>
@@ -114,7 +153,8 @@ const Jobs = () => {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Previous page</span>
             </Button>
             <span className="text-sm text-muted-foreground tabular-nums">
               Page {page} of {totalPages}
@@ -125,11 +165,25 @@ const Jobs = () => {
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Next page</span>
             </Button>
           </div>
         )}
+        </div>
       </div>
+
+      <section className="container pb-16 sm:pb-24" aria-labelledby="jobs-faq">
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <span className="section-rule" aria-hidden="true" />
+            <h2 id="jobs-faq" className="section-title">Applying for jobs</h2>
+          </div>
+          <div className="lg:col-span-8">
+            <FaqList faqs={JOBS_FAQS} />
+          </div>
+        </div>
+      </section>
     </Layout>
   );
 };

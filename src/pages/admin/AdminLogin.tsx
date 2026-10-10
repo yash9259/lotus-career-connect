@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
+import Seo from "@/components/seo/Seo";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("admin@hkjobs.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
@@ -38,8 +39,9 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card shadow-card p-8">
+    <div className="hero-mesh min-h-screen flex items-center justify-center px-4">
+      <Seo title="Admin Login" noindex />
+      <div className="w-full max-w-md rounded-2xl border border-border/70 bg-card shadow-premium p-8">
         <div className="mb-6 flex flex-col items-center text-center gap-2">
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Shield className="h-6 w-6" />
@@ -50,12 +52,14 @@ const AdminLogin = () => {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <Label>Email</Label>
-            <Input className="mt-1.5 h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Label htmlFor="admin-email">Email</Label>
+            <Input id="admin-email" type="email" autoComplete="username" className="mt-1.5 h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <Label>Password</Label>
+            <Label htmlFor="admin-password">Password</Label>
             <Input
+              id="admin-password"
+              autoComplete="current-password"
               className="mt-1.5 h-11"
               type="password"
               value={password}

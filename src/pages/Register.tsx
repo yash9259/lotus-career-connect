@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
+import Seo from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -355,6 +356,7 @@ const Register = () => {
 
   return (
     <Layout>
+      <Seo title="Register as a Candidate" description="Create your candidate profile with Hare Krishna Job Placement to browse openings, save jobs and apply from your dashboard." path="/register" />
       <div className="container py-10 sm:py-16 max-w-2xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Candidate Registration
@@ -461,7 +463,7 @@ const Register = () => {
                           key={language}
                           type="button"
                           onClick={() => toggleLanguage(language)}
-                          className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
                             formData.languages.toLowerCase().includes(language.toLowerCase())
                               ? "bg-primary text-primary-foreground border-primary"
                               : "bg-card text-muted-foreground border-border hover:border-primary/40"
@@ -630,7 +632,7 @@ const Register = () => {
                         key={interest}
                         type="button"
                         onClick={() => toggleInterest(interest)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
                           formData.jobInterests.includes(interest)
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-card text-muted-foreground border-border hover:border-primary/40"

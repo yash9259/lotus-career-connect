@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
+import Seo, { getSiteUrl } from "@/components/seo/Seo";
+import PageBreadcrumbs from "@/components/seo/PageBreadcrumbs";
+import { SITE, absoluteUrl, breadcrumbSchema } from "@/lib/seoConfig";
 import type { Job } from "@/lib/mockData";
 import { getApprovedJobById, listRecentApprovedJobs } from "@/lib/candidateDashboard";
 import { Button } from "@/components/ui/button";
@@ -15,6 +18,65 @@ import JobCard from "@/components/jobs/JobCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { checkCandidatePaymentVerified } from "@/lib/candidateDashboard";
+
+const EMPLOYMENT_TYPES: Record<string, string> = {
+  "full time": "FULL_TIME",
+  "full-time": "FULL_TIME",
+  "part time": "PART_TIME",
+  "part-time": "PART_TIME",
+  contract: "CONTRACTOR",
+  internship: "INTERN",
+  temporary: "TEMPORARY",
+};
+
+/** Parses strings like "₹8,00,000 – ₹14,00,000" into min/max numbers; returns null when unsure. */
+const parseSalaryRange = (value: string) => {
+  const numbers = (value.match(/\d[\d,]*/g) || []).map((n) => Number(n.replace(/,/g, ""))).filter((n) => n > 0);
+  if (numbers.length === 0 || numbers.length > 2) return null;
+  const [min, max = numbers[0]] = numbers;
+  return { min: Math.min(min, max), max: Math.max(min, max) };
+};
+
+const toPlainText = (value: string) => value.replace(/\s+/g, " ").trim();
+
+const buildJobPostingSchema = (job: Job, siteUrl: string) => {
+  const salary = parseSalaryRange(job.salaryRange);
+  const employmentType = EMPLOYMENT_TYPES[job.jobTime.trim().toLowerCase()];
+  const description = toPlainText([job.description, job.responsibilities].filter(Boolean).join(" "));
+  return {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.position,
+    description,
+    datePosted: job.postedAt,
+    ...(employmentType ? { employmentType } : {}),
+    identifier: { "@type": "PropertyValue", name: "Hare Krishna Job Placement", value: job.id },
+    // The employer's name is not shown on the public page, so the listing agency is declared instead.
+    hiringOrganization: {
+      "@type": "Organization",
+      name: SITE.name,
+      sameAs: siteUrl,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: { "@type": "PostalAddress", addressLocality: job.location, addressCountry: "IN" },
+    },
+    ...(job.industry ? { industry: job.industry } : {}),
+    ...(job.qualification ? { educationRequirements: job.qualification } : {}),
+    ...(job.skills?.length ? { skills: job.skills.join(", ") } : {}),
+    ...(salary
+      ? {
+          baseSalary: {
+            "@type": "MonetaryAmount",
+            currency: "INR",
+            value: { "@type": "QuantitativeValue", minValue: salary.min, maxValue: salary.max, unitText: "YEAR" },
+          },
+        }
+      : {}),
+    ...(job.vacancy > 0 ? { totalJobOpenings: job.vacancy } : {}),
+    url: absoluteUrl(siteUrl, `/jobs/${job.id}`),
+  };
+};
 
 const JobDetail = () => {
   const navigate = useNavigate();
@@ -58,6 +120,7 @@ const JobDetail = () => {
   if (isLoading) {
     return (
       <Layout>
+        <Seo title="Loading job" noindex />
         <div className="container py-8 sm:py-10 space-y-4">
           <Skeleton className="h-10 w-40" />
           <Skeleton className="h-[300px] rounded-xl" />
@@ -70,9 +133,11 @@ const JobDetail = () => {
   if (!job) {
     return (
       <Layout>
+        <Seo title="Job not found" description="This job is no longer available." noindex />
         <div className="container py-16 text-center">
-          <h1 className="text-xl font-semibold text-foreground mb-2">Job not found</h1>
-          <Link to="/jobs" className="text-primary hover:underline text-sm">Back to jobs</Link>
+          <h1 className="text-2xl font-semibold text-foreground mb-2">Job not found</h1>
+          <p className="mb-4 text-sm text-muted-foreground">This job may have been filled or removed.</p>
+          <Link to="/jobs" className="text-primary hover:underline text-sm font-medium">Back to jobs</Link>
         </div>
       </Layout>
     );
@@ -112,15 +177,32 @@ const JobDetail = () => {
     navigate("/dashboard/jobs");
   };
 
+  const siteUrl = getSiteUrl();
+  const crumbs = [
+    { label: "Home", to: "/" },
+    { label: "Browse Jobs", to: "/jobs" },
+    { label: job.position },
+  ];
+  const seoDescription = toPlainText(
+    `${job.position} in ${job.location} (${job.jobTime}, ${job.experience}). ${job.description}`,
+  ).slice(0, 158);
+
   return (
     <Layout>
+      <Seo
+        title={`${job.position} in ${job.location}`}
+        description={seoDescription}
+        type="article"
+        jsonLd={[buildJobPostingSchema(job, siteUrl), breadcrumbSchema(siteUrl, crumbs)]}
+      />
       <div className="bg-surface border-b border-border">
-        <div className="container py-4">
+        <div className="container flex flex-wrap items-center justify-between gap-3 py-4">
+          <PageBreadcrumbs items={crumbs} />
           <Link
             to="/jobs"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to jobs
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to jobs
           </Link>
         </div>
       </div>
@@ -133,10 +215,10 @@ const JobDetail = () => {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-xl shadow-card overflow-hidden"
+              className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-premium"
             >
               {/* Top accent bar */}
-              <div className="h-1.5 bg-primary" />
+              <div className="hairline-brand !h-1.5 !opacity-100" aria-hidden="true" />
               <div className="p-6 sm:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                   {/* Company avatar */}
@@ -255,7 +337,7 @@ const JobDetail = () => {
                     {job.benefits.map((b) => (
                       <span
                         key={b}
-                        className="inline-flex items-center gap-1.5 text-sm text-accent-foreground bg-accent px-3 py-1.5 rounded-full"
+                        className="inline-flex items-center gap-1.5 text-sm text-accent-foreground bg-accent px-3 py-1.5 rounded-md"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {b}
